@@ -1,14 +1,10 @@
 package org.coroutines
 
-
-
 import org.coroutines.common._
 import org.coroutines.common.Cache._
 import scala.collection._
-import scala.language.experimental.macros
+//import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-
-
 
 /** Generates control flow graphs, and converts CFG nodes to ASTs.
  */
@@ -19,13 +15,14 @@ trait CfgGenerator[C <: Context] {
 
   import c.universe._
 
-  private sealed trait CanCall
+  // TODO best if this was private
+  protected sealed trait CanCall
 
-  private object Permissions {
+  protected object Permissions {
     implicit object canEmit extends CanCall
   }
 
-  abstract class Node {
+  abstract sealed class Node {
     var successor: Option[Node] = None
 
     def successors: Seq[Node]
@@ -142,7 +139,7 @@ trait CfgGenerator[C <: Context] {
       val text = new StringBuilder
       var count = 0
       val seen = mutable.Map[Node, Int]()
-      def emit(n: Node, prefix: String) {
+      def emit(n: Node, prefix: String): Unit = {
         def shorten(s: String) = {
           if (s.contains('\n')) s.takeWhile(_ != '\n') + "..." else s
         }
@@ -154,11 +151,11 @@ trait CfgGenerator[C <: Context] {
           s"$prefix|-> $count: $name(uid = ${n.uid}, $hc) " +
           s"<$treerepr> ${n.chain.toString.take(50)}\n")
         count += 1
-        def emitChild(c: Node, newPrefix: String) {
+        def emitChild(c: Node, newPrefix: String): Unit = {
           if (seen.contains(c)) {
             val sn = seen(c)
             val hc = System.identityHashCode(c)
-            text.append(s"$newPrefix|-> label $sn (uid = ${c.uid}, $hc)\n")
+            val _ = text.append(s"$newPrefix|-> label $sn (uid = ${c.uid}, $hc)\n")
           } else {
             emit(c, newPrefix)
           }

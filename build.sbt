@@ -1,11 +1,5 @@
-//import java.io._
-//import sbt._
-//import sbt.Keys._
-//import sbt.Process._
-
-/* coroutines */
-
 // TODO support scalajs eventually
+
 lazy val scala213 = "2.13.3"
 lazy val scala212 = "2.12.11"
 lazy val scala211 = "2.11.12"
@@ -13,13 +7,6 @@ lazy val supportedScalaVersions = List(scala212, scala211)
 
 ThisBuild / organization := "io.github.littlenag"
 ThisBuild / scalaVersion := scala211
-
-ThisBuild / scalacOptions ++= Seq(
-  "-deprecation",
-  "-unchecked",
-  "-optimise",
-  "-Yinline-warnings"
-)
 
 ThisBuild / resolvers ++= Seq(
   "Sonatype OSS Snapshots" at
@@ -73,6 +60,7 @@ lazy val `coroutines-common` = (project in file("coroutines-common"))
    .settings(
      name := "coroutines-common",
      crossScalaVersions := supportedScalaVersions,
+     scalacOptions ~= filterTooStrictOptions,
      libraryDependencies ++= Seq(
        "org.scala-lang" % "scala-reflect" % scalaVersion.value,
        scalatestDep
@@ -89,9 +77,10 @@ lazy val `coroutines-impl` = (project in file("coroutines-impl"))
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "com.storm-enroute" %% "scalameter" % "0.18" % Test,
       scalatestDep
     ),
-    //  testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
+    //testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
     //ivyLoggingLevel in ThisBuild := UpdateLogging.Quiet,
     publishMavenStyle := true,
     publishArtifact in Test := false
@@ -111,10 +100,38 @@ lazy val `coroutines-extra` = (project in file("coroutines-extra"))
     publishArtifact in Test := false
   )
 
+
+def scalacOptionsC(scalaVersion: String) = {
+  CrossVersion.partialVersion(scalaVersion) match {
+    case Some((2, 11)) => Seq(
+      "-deprecation",
+      "-unchecked",
+      "-optimise",
+      "-Yinline-warnings"
+    )
+    case Some((2, 12)) => Seq(
+      "-deprecation",
+      "-unchecked"
+    )
+    case Some((2, 13)) => Seq(
+      "-deprecation",
+      "-unchecked"
+    )
+    case _ => throw new RuntimeException(s"Unsupported version: $scalaVersion")
+  }
+}
+
+val filterTooStrictOptions = { options: Seq[String] =>
+  options.filterNot(Set(
+    "-Xfatal-warnings"
+  ))
+}
+
 //lazy val `coroutines-benchmark` = (project in file("coroutines-benchmark"))
 //  .dependsOn(`coroutines-impl`)
 //  .settings(
 //    publish / skip := true,
-//    libraryDependencies ++= "org.scala-lang.modules" % "scala-async_2.11" % "0.9.5" % "test;bench"
+//    libraryDependencies ++= Seq("org.scala-lang.modules" % "scala-async_2.11" % "0.9.5" % "test;bench",
+//     "com.storm-enroute" %% "scalameter" % "0.18"),
 //  )
 //  .settings(coroutinesBenchmarkSettings: _*)

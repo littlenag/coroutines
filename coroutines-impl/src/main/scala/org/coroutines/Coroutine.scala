@@ -4,8 +4,8 @@ package org.coroutines
 
 import org.coroutines.common._
 import scala.annotation.tailrec
-import scala.annotation.unchecked.uncheckedVariance
-import scala.language.experimental.macros
+//import scala.annotation.unchecked.uncheckedVariance
+//import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.util.Failure
 import scala.util.Success
@@ -292,7 +292,7 @@ object Coroutine {
      */
     final def debugString: String = {
       def toStackLength[T](stack: Array[T]) =
-        if (stack != null) "${stack.length}" else "<uninitialized>"
+        if (stack != null) s"${stack.length}" else "<uninitialized>"
       def toStackString[T](stack: Array[T]) =
         if (stack != null) stack.mkString("[", ", ", "]") else "<uninitialized>"
       s"Coroutine.Instance <\n" +

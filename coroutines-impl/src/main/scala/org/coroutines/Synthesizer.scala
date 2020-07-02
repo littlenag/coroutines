@@ -1,13 +1,10 @@
 package org.coroutines
 
-
-
-import org.coroutines.common._
-import scala.annotation.tailrec
+//import org.coroutines.common._
+//import scala.annotation.tailrec
 import scala.collection._
-import scala.language.experimental.macros
+//import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-
 
 
 /** Synthesizes all coroutine-related functionality.

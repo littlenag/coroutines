@@ -1,14 +1,10 @@
 package org.coroutines
 
-
-
 import org.scalameter.api._
 import org.scalameter.japi.JBench
 import org.scalameter.japi.annotation._
 import org.scalameter.picklers.noPickler._
 import org.scalameter.execution.invocation._
-
-
 
 class CoroutineBoxingBench extends JBench.Forked[Long] {
   override def defaultConfig: Context = Context(

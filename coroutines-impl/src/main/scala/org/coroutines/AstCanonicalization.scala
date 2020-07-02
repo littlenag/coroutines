@@ -1,13 +1,9 @@
 package org.coroutines
 
-
-
 import org.coroutines.common._
-import scala.collection._
-import scala.language.experimental.macros
+//import scala.collection._
+//import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-
-
 
 /** Transforms the coroutine body into three address form with restricted control flow
  *  that contains only try-catch statements, while loops, if-statements, value and
@@ -65,7 +61,7 @@ trait AstCanonicalization[C <: Context] {
 
   def disallowCoroutinesIn(tree: Tree): Unit = {
     for (t <- tree) t match {
-      case CoroutineOp(t) => c.abort(t.pos, "Coroutines disallowed in:\n$tree.")
+      case CoroutineOp(t) => c.abort(t.pos, s"Coroutines disallowed in:\n$tree.")
       case _ => // fine
     }
   }

@@ -144,10 +144,11 @@ class AsyncAwaitTest extends FunSuite with Matchers {
     })
   }
 
+  trait Container[+A] {}
+  case class ContainerImpl[A](value: A) extends Container[A]
+
   // Source: https://git.io/vr7Fx
   test("existential if/else") {
-    trait Container[+A]
-    case class ContainerImpl[A](value: A) extends Container[A]
     def foo: Future[Container[_]] = AsyncAwaitTest.async(coroutine { () =>
       val a: Any = List(1)
       if (true) {

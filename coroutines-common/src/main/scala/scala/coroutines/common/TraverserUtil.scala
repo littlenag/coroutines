@@ -1,11 +1,6 @@
 package org.coroutines.common
 
-
-
-import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-
-
 
 /** Contains extra tree traversal methods.
  */
