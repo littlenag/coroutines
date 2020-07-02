@@ -1,2 +1,9 @@
 target
 tmp
+.idea/
+.bloop/
+node_modules/
+.gradle/
+build/
+local.properties
+.expo/
