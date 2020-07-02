@@ -8,7 +8,7 @@ import scala.util.Failure
 
 
 
-class YieldToTest extends FunSuite with Matchers {
+class YieldToTest extends funsuite.AnyFunSuite {
   test("after resuming to another coroutine, there should be no value") {
     val another = coroutine { () =>
       yieldval("Yohaha")

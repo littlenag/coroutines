@@ -7,7 +7,7 @@ import scala.util.Failure
 
 
 
-class RegressionTest extends FunSuite with Matchers {
+class RegressionTest extends funsuite.AnyFunSuite {
   test("should declare body with if statement") {
     val xOrY = coroutine { (x: Int, y: Int) =>
       if (x > 0) {

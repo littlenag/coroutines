@@ -1,13 +1,10 @@
 package org.coroutines
 
-
-
 import org.scalatest._
-import scala.util.Failure
+//import org.scalatest.matchers.must.Matchers
+import org.scalatest.Assertions._
 
-
-
-class ASTCanonicalizationTest extends FunSuite with Matchers {
+class ASTCanonicalizationTest extends funsuite.AnyFunSuite {
   test("if statements with applications") {
     val rube = coroutine { () =>
       if (0 < { math.abs(-1); math.max(1, 2) }) 2 else 1

@@ -8,7 +8,7 @@ import scala.util.Failure
 
 
 
-class SnapshotTest extends FunSuite with Matchers {
+class SnapshotTest extends funsuite.AnyFunSuite {
   test("coroutine instance should be cloned and resumed as needed") {
     val countdown = coroutine { (n: Int) =>
       var i = n

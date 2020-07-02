@@ -10,7 +10,7 @@ import scala.util.Failure
 
 
 
-class TryCatchTest extends FunSuite with Matchers {
+class TryCatchTest extends funsuite.AnyFunSuite {
   test("try-catch block") {
     val rube = coroutine { () =>
       try {

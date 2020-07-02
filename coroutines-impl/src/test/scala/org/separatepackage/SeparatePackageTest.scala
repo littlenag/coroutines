@@ -8,7 +8,7 @@ import scala.util.Failure
 
 
 
-class SeparatePackageTest extends FunSuite with Matchers {
+class SeparatePackageTest extends funsuite.AnyFunSuite {
   test("should declare and run a coroutine") {
     val rube = coroutine { (x: Int) =>
       yieldval(x * 2)

@@ -7,7 +7,7 @@ import scala.util.Failure
 
 
 
-class ExamplesTest extends FunSuite with Matchers {
+class ExamplesTest extends funsuite.AnyFunSuite {
   test("identity coroutine") {
     Identity.main(Array())
   }

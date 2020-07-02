@@ -1,13 +1,9 @@
 package org.coroutines
 
-
-
 import org.scalatest._
 import scala.util.Failure
 
-
-
-class CoroutineTest extends FunSuite with Matchers {
+class CoroutineTest extends funsuite.AnyFunSuite {
   test("should not yield") {
     val getOk = coroutine { () => "ok" }
     val c = call(getOk())
@@ -637,7 +633,7 @@ class CoroutineTest extends FunSuite with Matchers {
 }
 
 
-class WideValueTypesTest extends FunSuite with Matchers {
+class WideValueTypesTest extends funsuite.AnyFunSuite {
   test("should use a long stack variable") {
     val rube = coroutine { (x: Long) =>
       var y = x

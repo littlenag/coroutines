@@ -1,13 +1,9 @@
 package org.coroutines
 
-
-
 import org.scalatest._
 import scala.util.Failure
 
-
-
-class PatternMatchTest extends FunSuite with Matchers {
+class PatternMatchTest extends funsuite.AnyFunSuite {
   test("simple pattern match") {
     val rube = coroutine { (x: AnyRef) =>
       x match {

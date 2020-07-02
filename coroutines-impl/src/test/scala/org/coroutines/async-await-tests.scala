@@ -70,7 +70,7 @@ object PrivateWrapper {
 }
 
 
-class AsyncAwaitTest extends FunSuite with Matchers {
+class AsyncAwaitTest extends funsuite.AnyFunSuite {
   def await[R]: Future[R] ~~> ((Future[R], AsyncAwaitTest.Cell[R]), R) =
     coroutine { (f: Future[R]) =>
       val cell = new AsyncAwaitTest.Cell[R]

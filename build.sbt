@@ -3,10 +3,10 @@
 lazy val scala213 = "2.13.3"
 lazy val scala212 = "2.12.11"
 lazy val scala211 = "2.11.12"
-lazy val supportedScalaVersions = List(scala212, scala211)
+lazy val supportedScalaVersions = List(scala213, scala212, scala211)
 
 ThisBuild / organization := "io.github.littlenag"
-ThisBuild / scalaVersion := scala211
+ThisBuild / scalaVersion := scala212
 
 ThisBuild / resolvers ++= Seq(
   "Sonatype OSS Snapshots" at
@@ -54,7 +54,7 @@ lazy val root = (project in file("."))
     publish / skip := true
   )
 
-lazy val scalatestDep = "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+lazy val scalatestDep = "org.scalatest" %% "scalatest" % "3.2.0" % Test
 
 lazy val `coroutines-common` = (project in file("coroutines-common"))
    .settings(
@@ -77,7 +77,7 @@ lazy val `coroutines-impl` = (project in file("coroutines-impl"))
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "com.storm-enroute" %% "scalameter" % "0.18" % Test,
+      "com.storm-enroute" %% "scalameter" % "0.19" % Test,
       scalatestDep
     ),
     //testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),

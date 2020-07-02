@@ -1,22 +1,18 @@
 package org.coroutines.extra
 
-
-
 import org.coroutines._
 import org.scalatest._
-import scala.annotation.unchecked.uncheckedVariance
+import org.scalatest.matchers.should.Matchers
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.concurrent.duration._
-import scala.language.{ reflectiveCalls, postfixOps }
-import scala.util.Success
-
-
+import scala.language.{postfixOps, reflectiveCalls}
 
 class TestException(msg: String = "") extends Throwable(msg)
 
 
-class AsyncAwaitTest extends FunSuite with Matchers {
+class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
   import AsyncAwait._
 
   /** Source: https://git.io/vorXv

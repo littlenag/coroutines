@@ -1,13 +1,9 @@
 package org.coroutines
 
-
-
 import org.scalatest._
 import scala.util.Failure
 
-
-
-class CoroutineSyntaxTest extends FunSuite with Matchers {
+class CoroutineSyntaxTest extends funsuite.AnyFunSuite {
   test("coroutine instance must have nicer syntax") {
     val id: Int ~~> (Nothing, Int) = coroutine { (x: Int) => x }
     val c: Nothing <~> Int = call(id(5))

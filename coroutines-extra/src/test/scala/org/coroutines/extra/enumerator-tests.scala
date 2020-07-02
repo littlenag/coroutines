@@ -8,7 +8,7 @@ import scala.collection._
 
 
 
-class EnumeratorsTest extends FunSuite with Matchers {
+class EnumeratorsTest extends funsuite.AnyFunSuite {
   val rube = coroutine { () =>
     yieldval(1)
     yieldval(2)
