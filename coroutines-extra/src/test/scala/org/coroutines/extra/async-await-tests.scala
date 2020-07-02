@@ -31,7 +31,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
         0
       }
     }
-    assert(Await.result(future, 1 seconds) == 42)
+    assert(Await.result(future, 1.seconds) == 42)
   }
 
   /** Asynchronous blocks of code can be defined either outside of or within any
@@ -52,7 +52,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
         200
       }
     }
-    assert(Await.result(outerFuture, 1 seconds) == 100)
+    assert(Await.result(outerFuture, 1.seconds) == 100)
   }
 
   /** Uncaught exceptions thrown inside async blocks cause the associated futures
@@ -65,7 +65,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
         sys.error(errorMessage)
         await(Future("dog"))
       }
-      val result = Await.result(future, 1 seconds)
+      val result = Await.result(future, 1.seconds)
     }
     assert(exception.getMessage == errorMessage)
   }
@@ -79,7 +79,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
           "Here ya go"
         })
       }
-      val result = Await.result(future, 1 seconds)
+      val result = Await.result(future, 1.seconds)
     }
     assert(exception.getMessage == errorMessage)
   }
@@ -114,7 +114,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
       ()
     }
     intercept[TestException] {
-      Await.result(future, 1 seconds)
+      Await.result(future, 1.seconds)
     }
   }
 
@@ -125,7 +125,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
       val x = await(base)
       x * 2
     }
-    intercept[TestException] { Await.result(future, 1 seconds) }
+    intercept[TestException] { Await.result(future, 1.seconds) }
   }
 
   /** Source: https://git.io/vowdY
@@ -141,7 +141,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
       b + "-" + c
     }
     intercept[ClassCastException] {
-      Await.result(future, 1 seconds)
+      Await.result(future, 1.seconds)
     }
   }
 
@@ -155,7 +155,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
       b + "-" + c
     }
     intercept[ClassCastException] {
-      Await.result(future, 1 seconds)
+      Await.result(future, 1.seconds)
     }
   }
 
@@ -174,7 +174,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
         case _: TestException => exceptionFound = true
       }
     }
-    val r = Await.result(future, 1 seconds)
+    val r = Await.result(future, 1.seconds)
     assert(exceptionFound)
   }
 
@@ -192,7 +192,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
         case _: TestException => exceptionFound = true
       }
     }
-    val r = Await.result(future, 1 seconds)
+    val r = Await.result(future, 1.seconds)
     assert(exceptionFound)
   }
 }

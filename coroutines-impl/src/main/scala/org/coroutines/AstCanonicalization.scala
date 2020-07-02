@@ -362,6 +362,7 @@ trait AstCanonicalization[C <: Context] {
       val (statdecls, statidents) = stats.map(canonicalize).unzip
       val (exprdecls, exprident) = canonicalize(q"$localvarname = $expr")
       val tpe = typer.typeOf(expr)
+      println(s"!!!!!! $tpe")
       val decls =
         List(q"var $localvarname = null.asInstanceOf[${tpe.widen}]") ++
         statdecls.flatten ++

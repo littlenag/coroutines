@@ -20,13 +20,13 @@ package object coroutines {
 
   def call[R](f: R): Any = macro Coroutine.call[R]
 
+  // Y = Yield Type
+  // R = Return Type
   def coroutine[Y, R](f: Any): Any = macro Coroutine.synthesize
 
   /* syntax sugar */
 
   type <~>[Y, R] = Coroutine.Instance[Y, R]
-
-
 
   implicit def coroutine0nothing[R](b: Coroutine._0[Nothing, R]) =
     new ~~~>[Nothing, R](b)

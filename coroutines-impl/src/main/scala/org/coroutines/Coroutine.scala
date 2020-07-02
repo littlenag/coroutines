@@ -1,17 +1,9 @@
 package org.coroutines
 
-
-
 import org.coroutines.common._
 import scala.annotation.tailrec
-//import scala.annotation.unchecked.uncheckedVariance
-//import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
-
+import scala.util.{Try, Success, Failure}
 
 trait Coroutine[@specialized Y, R] extends Coroutine.DefMarker[(Y, R)] {
   def $enter(c: Coroutine.Instance[Y, R]): Unit

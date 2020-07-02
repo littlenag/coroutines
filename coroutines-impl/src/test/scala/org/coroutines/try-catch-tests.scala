@@ -153,7 +153,7 @@ class TryCatchTest extends funsuite.AnyFunSuite {
     }
     val instance = call(c())
     assert(!instance.resume)
-    assert(Await.result(instance.result, 1 seconds) == "oh")
+    assert(Await.result(instance.result, 1.seconds) == "oh")
   }
 
   test("try/catch with same return type") {

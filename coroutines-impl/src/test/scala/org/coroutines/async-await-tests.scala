@@ -1,15 +1,10 @@
 package org.coroutines
 
-
-
 import org.scalatest._
 import scala.annotation.unchecked.uncheckedVariance
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Success
-
-
 
 object AsyncAwaitTest {
   class Cell[+T] {
@@ -99,7 +94,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
   test("propagates tough types") {
     val fut = org.coroutines.AsyncAwaitTest.ToughTypeObject.m2
     val result: (List[_], org.coroutines.AsyncAwaitTest.ToughTypeObject.Inner) =
-      Await.result(fut, 2 seconds)
+      Await.result(fut, 2.seconds)
     assert(result._1 == Nil)
   }
 
@@ -111,7 +106,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
       val f = { case x => x + a }: Function[Int, Int]
       await(Future(f(2)))
     })
-    val res = Await.result(c, 2 seconds)
+    val res = Await.result(c, 2.seconds)
     assert(res == 3)
   }
 
@@ -126,7 +121,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
           await(Future(x))
       }
     })
-    val res = Await.result(m(Nil), 2 seconds)
+    val res = Await.result(m(Nil), 2.seconds)
     assert(res == 0)
   }
 
@@ -209,7 +204,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
       AsyncAwaitTest.await(Future(Future(uid)))
     })
     val outer = Await.result(f, 5.seconds)
-    val inner = Await.result(outer, 5 seconds)
+    val inner = Await.result(outer, 5.seconds)
     assert(inner == new IntWrapper("foo"))
   }
 
@@ -226,7 +221,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
   //     }
   //   })
 
-  //   val result = Await.result(fut, 5 seconds)
+  //   val result = Await.result(fut, 5.seconds)
   //   assert(result.asInstanceOf[Future[IntWrapper]].value == Some(Success(None)))
   // }
 
@@ -246,7 +241,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
   //     }
   //   })
 
-  //   val result = Await.result(fut, 5 seconds)
+  //   val result = Await.result(fut, 5.seconds)
   //   assert(result.asInstanceOf[Future[ParamWrapper[String]]].value ==
   //     Some(Success(None)))
   // }
@@ -264,7 +259,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
   //     }
   //   })
 
-  //   val result = Await.result(fut, 5 seconds)
+  //   val result = Await.result(fut, 5.seconds)
   //   assert(result == None)
   // }
 
@@ -279,8 +274,8 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
 
     val fut = combineAsync(Future(1), Future(2))
 
-    val outer = Await.result(fut, 5 seconds)
-    val inner = Await.result(outer, 5 seconds)
+    val outer = Await.result(fut, 5.seconds)
+    val inner = Await.result(outer, 5.seconds)
     assert(inner == 1)
   }
 
@@ -292,7 +287,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
       }
       x
     })
-    val result = Await.result(c, 5 seconds)
+    val result = Await.result(c, 5.seconds)
     assert(result == 2)
   }
 
@@ -308,7 +303,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
         case _ => await(Future(y)) + 100
       }
     })
-    val result = Await.result(c, 5 seconds)
+    val result = Await.result(c, 5.seconds)
     assert(result == 103)
   }
 
@@ -323,12 +318,12 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
     val c1 = async(coroutine { () =>
       foo(b = await(Future(next())))
     })
-    assert(Await.result(c1, 5 seconds) == (2, 1))
+    assert(Await.result(c1, 5.seconds) == (2, 1))
     i = 0
     val c2 = async(coroutine { () =>
       foo(a = await(Future(next())))
     })
-    assert(Await.result(c2, 5 seconds) == (1, 2))
+    assert(Await.result(c2, 5.seconds) == (1, 2))
   }
 
   // Source: https://git.io/vrhTT
@@ -339,7 +334,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
     val c = async(coroutine { () =>
       foo(await(Future(0)), id(1), id(2), id(3), await(Future(4)))
     })
-    assert(Await.result(c, 5 seconds) == List(1, 2, 3, 4))
+    assert(Await.result(c, 5.seconds) == List(1, 2, 3, 4))
   }
 
   // Source: https://git.io/vrhTY
@@ -350,7 +345,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
     val c = async(coroutine { () =>
       foo(await(Future(0)), List(id(1), id(2), id(3)): _*)
     })
-    assert(Await.result(c, 5 seconds) == List(1, 2, 3))
+    assert(Await.result(c, 5.seconds) == List(1, 2, 3))
   }
 
   // Source: https://git.io/vrhT0
@@ -358,7 +353,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
     val c = async(coroutine { () =>
       (("msg: " + await(Future(0))): String).toString
     })
-    assert(Await.result(c, 5 seconds) == "msg: 0")
+    assert(Await.result(c, 5.seconds) == "msg: 0")
   }
 
   // Source: https://git.io/vrhTz
@@ -368,7 +363,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
       x = await(Future(1))
       x
     })
-    assert(Await.result(c, 5 seconds) == 1)
+    assert(Await.result(c, 5.seconds) == 1)
   }
 
   // Source: https://git.io/vrhTr
@@ -381,7 +376,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
         case Down => -1.0
       }
     })
-    assert(Await.result(sign, 5 seconds) == 1.0)
+    assert(Await.result(sign, 5.seconds) == 1.0)
   }
 
   test("compilation error in partial function") {
@@ -396,6 +391,6 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
       await(Future("oh"))
     }
     val future = async(c)
-    assert(Await.result(future, 1 seconds) == "oh")
+    assert(Await.result(future, 1.seconds) == "oh")
   }
 }

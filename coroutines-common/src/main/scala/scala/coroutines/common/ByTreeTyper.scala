@@ -13,7 +13,7 @@ private[coroutines] class ByTreeTyper[C <: Context](val c: C)(val treeValue: Any
 
   object typeOf {
     private val augmentedTypes = mutable.Map[Tree, Type]()
-    def apply(t: Tree) = {
+    def apply(t: Tree): c.universe.Type = {
       if (augmentedTypes.contains(t)) augmentedTypes(t)
       else if (treeMapping.contains(t)) treeMapping(t).tpe
       else t.tpe
