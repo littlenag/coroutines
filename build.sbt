@@ -46,9 +46,10 @@ ThisBuild / developers := List(
   )
 )
 
-lazy val root = (project in file("."))
+lazy val coroutines = (project in file("."))
   .aggregate(`coroutines-common`, `coroutines-impl`, `coroutines-extra`) //, `coroutines-benchmark`)
   .settings(
+    name := "coroutines",
     // crossScalaVersions must be set to Nil on the aggregating project
     crossScalaVersions := Nil,
     publish / skip := true
@@ -73,7 +74,7 @@ lazy val `coroutines-common` = (project in file("coroutines-common"))
 lazy val `coroutines-impl` = (project in file("coroutines-impl"))
   .dependsOn(`coroutines-common` % "compile->compile;test->test")
   .settings(
-    name := "coroutines",
+    name := "coroutines-impl",
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
