@@ -319,8 +319,8 @@ trait Analyzer[C <: Context] {
     tpe.baseType(codefsym) != NoType
   }
 
-  def isCoroutineDefMarker(tpe: Type) = {
-    val codefsym = typeOf[Coroutine.DefMarker[_]].typeConstructor.typeSymbol
+  def isCoroutineFactoryDefMarker(tpe: Type) = {
+    val codefsym = typeOf[Coroutine.FactoryDefMarker[_]].typeConstructor.typeSymbol
     tpe.baseType(codefsym) != NoType
   }
 
@@ -366,7 +366,7 @@ trait Analyzer[C <: Context] {
     }
 
   def coroutineYieldReturnTypes(tpe: Type) = {
-    val codefsym = typeOf[Coroutine.DefMarker[_]].typeConstructor.typeSymbol
+    val codefsym = typeOf[Coroutine.FactoryDefMarker[_]].typeConstructor.typeSymbol
     val tuplesym = typeOf[(_, _)].typeConstructor.typeSymbol
     tpe.baseType(codefsym) match {
       case TypeRef(_, sym, List(typetuple)) =>
@@ -385,13 +385,15 @@ trait Analyzer[C <: Context] {
     def unapply(t: Tree): Option[Tree] = t match {
       case q"$qual.`package`.coroutine[$_]($_)" if isCoroutinesPkg(qual) =>
         Some(t)
+      case q"$qual.`package`.next[$_]()" if isCoroutinesPkg(qual) =>
+        Some(t)
       case q"$qual.`package`.yieldval[$_]($_)" if isCoroutinesPkg(qual) =>
         Some(t)
       case q"$qual.`package`.yieldto[$_]($_)" if isCoroutinesPkg(qual) =>
         Some(t)
       case q"$qual.`package`.call($_.apply(..$_))" if isCoroutinesPkg(qual) =>
         Some(t)
-      case q"$co.apply(..$_)" if isCoroutineDefMarker(co.tpe) =>
+      case q"$co.apply(..$_)" if isCoroutineFactoryDefMarker(co.tpe) =>
         Some(t)
       case q"$co.apply[..$_](..$_)(..$_)" if isCoroutineDefSugar(co.tpe) =>
         Some(t)
@@ -440,7 +442,7 @@ trait Analyzer[C <: Context] {
     val constraintTpes = body.collect {
       case q"$qual.yieldval[$tpt]($_)" if isCoroutinesPkg(qual) =>
         tpt.tpe
-      case q"$co.apply(..$_)" if isCoroutineDefMarker(co.tpe) =>
+      case q"$co.apply(..$_)" if isCoroutineFactoryDefMarker(co.tpe) =>
         coroutineYieldReturnTypes(co.tpe)._1
       case q"$co.apply[..$_](..$_)(..$_)" if isCoroutineDefSugar(co.tpe) =>
         coroutineYieldReturnTypes(co.tpe)._1

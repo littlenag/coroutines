@@ -6,17 +6,23 @@ import scala.reflect.macros.whitebox.Context
 import scala.util.{Try, Success, Failure}
 
 /**
- * The object that generates instances of callable coroutines.
+ * The object that generates instances of callable coroutines. Factory
  * @tparam Y
  * @tparam R
  */
-trait Coroutine[@specialized Y, R] extends Coroutine.DefMarker[(Y, R)] {
+trait Coroutine[@specialized Y, R] extends Coroutine.FactoryDefMarker[(Y, R)] {
   def $enter(c: Coroutine.Instance[Y, R]): Unit
+  def $suspend(c: Coroutine.Instance[Y, R]): Unit = {
+    c.$hasYield = false
+    c.$yield = null.asInstanceOf[Y]
+  }
   def $assignyield(c: Coroutine.Instance[Y, R], v: Y): Unit = {
     c.$hasYield = true
     c.$yield = v
   }
+
   def $assignresult(c: Coroutine.Instance[Y, R], v: R): Unit = c.$result = v
+
   def $returnvalue$Z(c: Coroutine.Instance[Y, R], v: Boolean): Unit
   def $returnvalue$B(c: Coroutine.Instance[Y, R], v: Byte): Unit
   def $returnvalue$S(c: Coroutine.Instance[Y, R], v: Short): Unit
@@ -26,6 +32,9 @@ trait Coroutine[@specialized Y, R] extends Coroutine.DefMarker[(Y, R)] {
   def $returnvalue$J(c: Coroutine.Instance[Y, R], v: Long): Unit
   def $returnvalue$D(c: Coroutine.Instance[Y, R], v: Double): Unit
   def $returnvalue$L(c: Coroutine.Instance[Y, R], v: Any): Unit
+
+  // Pre-defined entry points for a coroutine instance
+  // each entry point will be used for each yield separated control flow node
   def $ep0(c: Coroutine.Instance[Y, R]): Unit = {}
   def $ep1(c: Coroutine.Instance[Y, R]): Unit = {}
   def $ep2(c: Coroutine.Instance[Y, R]): Unit = {}
@@ -83,6 +92,11 @@ object Coroutine {
     }
   }
 
+  /**
+   * Instance of a coroutine that has been instantiated with its arguments.
+   * @tparam Y
+   * @tparam R
+   */
   class Instance[@specialized Y, R] {
     var $costackptr = 0
     var $costack: Array[Coroutine[Y, R]] =
@@ -98,6 +112,9 @@ object Coroutine {
     var $hasYield: Boolean = false
     var $yield: Y = null.asInstanceOf[Y]
     var $result: R = null.asInstanceOf[R]
+
+    // Single cell so that we can inject data on resume
+    var $cell: Option[AnyRef] = None
 
     /** Clones the coroutine that this instance is a part of.
      *
@@ -116,7 +133,21 @@ object Coroutine {
       frame
     }
 
-    /** Advances the coroutine to the next yield point.
+    /** Supplies a value for the coroutine, and advances to the next yield point.
+     *
+     *  @return `true` if resume can be called again, `false` otherwise.
+     *  @throws CoroutineStoppedException If the coroutine is not live.
+     */
+    final def resumeWithValue[T](value:T): Boolean = {
+      if (isLive) {
+        $hasYield = false
+        $yield = null.asInstanceOf[Y]
+        $cell = Option(value).asInstanceOf[Option[AnyRef]]
+        Coroutine.resume[Y, R](this, this)
+      } else throw new CoroutineStoppedException
+    }
+
+    /** Advances the coroutine to the next suspend (yield or next) point.
      *
      *  @return `true` if resume can be called again, `false` otherwise.
      *  @throws CoroutineStoppedException If the coroutine is not live.
@@ -308,7 +339,7 @@ object Coroutine {
     }
   }
 
-  trait DefMarker[YR]
+  trait FactoryDefMarker[YR]
 
   def synthesize(c: Context)(f: c.Tree): c.Tree = {
     new Synthesizer[c.type](c).synthesize(f)
@@ -319,34 +350,34 @@ object Coroutine {
   }
 
   // Requires 0 arguments to create a coroutine instance
-  abstract class _0[@specialized T, R] extends Coroutine[T, R] {
+  abstract class _0[@specialized Y, R] extends Coroutine[Y, R] {
     def apply(): R
-    def $call(): Instance[T, R]
-    def $push(c: Instance[T, R]): Unit
+    def $call(): Instance[Y, R]
+    def $push(c: Instance[Y, R]): Unit
     override def toString = s"Coroutine._0@${System.identityHashCode(this)}"
   }
 
   // Requires 1 argument to create a coroutine instance
-  abstract class _1[A0, @specialized T, R] extends Coroutine[T, R] {
+  abstract class _1[A0, @specialized Y, R] extends Coroutine[Y, R] {
     def apply(a0: A0): R
-    def $call(a0: A0): Instance[T, R]
-    def $push(c: Instance[T, R], a0: A0): Unit
+    def $call(a0: A0): Instance[Y, R]
+    def $push(c: Instance[Y, R], a0: A0): Unit
     override def toString = s"Coroutine._1@${System.identityHashCode(this)}"
   }
 
   // Requires 2 arguments to create a coroutine instance
-  abstract class _2[A0, A1, @specialized T, R] extends Coroutine[T, R] {
+  abstract class _2[A0, A1, @specialized Y, R] extends Coroutine[Y, R] {
     def apply(a0: A0, a1: A1): R
-    def $call(a0: A0, a1: A1): Instance[T, R]
-    def $push(c: Instance[T, R], a0: A0, a1: A1): Unit
+    def $call(a0: A0, a1: A1): Instance[Y, R]
+    def $push(c: Instance[Y, R], a0: A0, a1: A1): Unit
     override def toString = s"Coroutine._2@${System.identityHashCode(this)}"
   }
 
   // Requires 3 arguments to create a coroutine instance
-  abstract class _3[A0, A1, A2, @specialized T, R] extends Coroutine[T, R] {
+  abstract class _3[A0, A1, A2, @specialized Y, R] extends Coroutine[Y, R] {
     def apply(a0: A0, a1: A1, a2: A2): R
-    def $call(a0: A0, a1: A1, a2: A2): Instance[T, R]
-    def $push(c: Instance[T, R], a0: A0, a1: A1, a2: A2): Unit
+    def $call(a0: A0, a1: A1, a2: A2): Instance[Y, R]
+    def $push(c: Instance[Y, R], a0: A0, a1: A1, a2: A2): Unit
     override def toString = s"Coroutine._3@${System.identityHashCode(this)}"
   }
 }

@@ -627,19 +627,62 @@ trait CfgGenerator[C <: Context] {
       }
     }
 
+    case class Next(tree: Tree, chain: Chain, uid: Long) extends Node {
+      def successors = successor.toSeq
+      override def code = tree
+
+      def emit(z: Zipper, seen: mutable.Set[Node], subgraph: SubCfg)(implicit cc: CanCall, table: Table): Zipper = {
+        val cparam = table.names.coroutineParam
+
+        val savestate = genSaveState(subgraph)
+
+        val exittree = q"""
+          ..$savestate
+          $$suspend($cparam)
+          return
+        """
+
+        val resumetree = tree match {
+          case q"$_ val $name: $_ = $qual.next[$_]()" if isCoroutinesPkg(qual) =>
+            q"""val $name = $cparam.$$cell.getOrElse(throw new RuntimeException("Expected cell value"))"""
+
+          case q"$_ var $name: $_ = $qual.next[$_]()" if isCoroutinesPkg(qual) =>
+            q"""var $name = $cparam.$$cell.getOrElse(throw new RuntimeException("Expected cell value"))"""
+        }
+
+        val z1 = z.append(exittree).append(resumetree)
+        z1
+      }
+      override def stackVars(sub: SubCfg) = storePointVarsInChain(sub).map(_._1)
+      def extract(
+                   prevchain: Chain, seen: mutable.Map[Node, Node], ctx: ExtractSubgraphContext,
+                   subgraph: SubCfg
+                 )(implicit table: Table): Node = {
+        val nthis = this.copyWithoutSuccessors(prevchain)
+        seen(this) = nthis
+        nthis.updateBlockInfo()
+
+        this.addSuccessorsToNodeFront(ctx)
+        ctx.exitPoints(subgraph)(nthis) = successor.get.uid
+
+        nthis
+      }
+      def copyWithoutSuccessors(nch: Chain) = Next(tree, nch, uid)
+    }
+
     case class YieldVal(
       tree: Tree, chain: Chain, uid: Long
     ) extends Node {
       def successors = successor.toSeq
+
       override def code = {
         tree match {
           case q"$_ val $_: $_ = $qual.yieldval[$_]($x)" if isCoroutinesPkg(qual) => x
           case q"$_ var $_: $_ = $qual.yieldval[$_]($x)" if isCoroutinesPkg(qual) => x
         }
       }
-      def emit(z: Zipper, seen: mutable.Set[Node], subgraph: SubCfg)(
-        implicit cc: CanCall, table: Table
-      ): Zipper = {
+
+      def emit(z: Zipper, seen: mutable.Set[Node], subgraph: SubCfg)(implicit cc: CanCall, table: Table): Zipper = {
         val x = tree match {
           case q"$_ val $_: $_ = $qual.yieldval[$_]($x)" if isCoroutinesPkg(qual) => x
           case q"$_ var $_: $_ = $qual.yieldval[$_]($x)" if isCoroutinesPkg(qual) => x
@@ -654,11 +697,10 @@ trait CfgGenerator[C <: Context] {
         val z1 = z.append(exittree)
         z1
       }
+
       override def stackVars(sub: SubCfg) = storePointVarsInChain(sub).map(_._1)
-      def extract(
-        prevchain: Chain, seen: mutable.Map[Node, Node], ctx: ExtractSubgraphContext,
-        subgraph: SubCfg
-      )(implicit table: Table): Node = {
+
+      def extract(prevchain: Chain, seen: mutable.Map[Node, Node], ctx: ExtractSubgraphContext, subgraph: SubCfg)(implicit table: Table): Node = {
         val nthis = this.copyWithoutSuccessors(prevchain)
         seen(this) = nthis
         nthis.updateBlockInfo()
@@ -668,6 +710,7 @@ trait CfgGenerator[C <: Context] {
 
         nthis
       }
+
       def copyWithoutSuccessors(nch: Chain) = YieldVal(tree, nch, uid)
     }
 
@@ -1023,11 +1066,22 @@ trait CfgGenerator[C <: Context] {
     }
   }
 
-  def genControlFlowGraph(args: List[Tree], body: Tree, tpt: Tree)(
-    implicit table: Table
-  ): Cfg = {
+  def genControlFlowGraph(args: List[Tree], body: Tree, tpt: Tree)(implicit table: Table): Cfg = {
     def traverse(t: Tree, ch: Chain): (Node, Node) = {
       t match {
+        case q"$_ val $_: $_ = $qual.next[$_]()" if isCoroutinesPkg(qual) =>
+          val nch = ch.withDecl(t, false)
+          val n = Node.Next(t, ch, table.newNodeUid())
+          val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
+          n.successor = Some(u)
+          (n, u)
+        case q"$_ var $_: $_ = $qual.next[$_]()" if isCoroutinesPkg(qual) =>
+          val nch = ch.withDecl(t, false)
+          val n = Node.Next(t, ch, table.newNodeUid())
+          val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
+          n.successor = Some(u)
+          (n, u)
+
         case q"$_ val $_: $_ = $qual.yieldval[$_]($_)" if isCoroutinesPkg(qual) =>
           val nch = ch.withDecl(t, false)
           val n = Node.YieldVal(t, ch, table.newNodeUid())
@@ -1040,6 +1094,7 @@ trait CfgGenerator[C <: Context] {
           val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
           n.successor = Some(u)
           (n, u)
+
         case q"$_ val $_: $_ = $qual.yieldto[$_]($_)" if isCoroutinesPkg(qual) =>
           val nch = ch.withDecl(t, false)
           val n = Node.YieldTo(t, ch, table.newNodeUid())
@@ -1052,15 +1107,16 @@ trait CfgGenerator[C <: Context] {
           val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
           n.successor = Some(u)
           (n, u)
+
         case ValDecl(t @ q"$_ val $_ = $c.apply(..$_)")
-          if isCoroutineDefMarker(c.tpe) =>
+          if isCoroutineFactoryDefMarker(c.tpe) =>
           val nch = ch.withDecl(t, false)
           val n = Node.ApplyCoroutine(t, ch, table.newNodeUid())
           val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
           n.successor = Some(u)
           (n, u)
         case ValDecl(t @ q"$_ var $_ = $c.apply(..$_)")
-          if isCoroutineDefMarker(c.tpe) =>
+          if isCoroutineFactoryDefMarker(c.tpe) =>
           val nch = ch.withDecl(t, false)
           val n = Node.ApplyCoroutine(t, ch, table.newNodeUid())
           val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
@@ -1088,6 +1144,7 @@ trait CfgGenerator[C <: Context] {
           (n, u)
         case q"return $_" =>
           c.abort(t.pos, "Return statements not allowed inside coroutines.")
+
         case q"if ($cond) $thenbranch else $elsebranch" =>
           val endnode = Node.IfEnd(ch, table.newNodeUid())
           val ifnode = Node.If(endnode.uid, t, ch, table.newNodeUid())
@@ -1107,6 +1164,7 @@ trait CfgGenerator[C <: Context] {
           addBranch(thenbranch, n => ifnode.successor = Some(n))
           addBranch(elsebranch, n => ifnode.elseSuccessor = Some(n))
           (ifnode, endnode)
+
         case q"while ($cond) $body" =>
           val whilenode = Node.While(t, ch, table.newNodeUid())
           val endnode = Node.WhileEnd(ch, table.newNodeUid())
@@ -1117,6 +1175,7 @@ trait CfgGenerator[C <: Context] {
           endnode.whileSuccessor = Some(whilenode)
           whilenode.endSuccessor = Some(endnode)
           (whilenode, endnode)
+
         case q"try $body catch { case ..$cases }" =>
           assert(cases.length == 1)
           val endnode = Node.TryBlockEnd(ch, table.newNodeUid())
@@ -1127,6 +1186,7 @@ trait CfgGenerator[C <: Context] {
           trynode.successor = Some(childhead)
           childlast.successor = Some(endnode)
           (trynode, endnode)
+
         case q"try $body finally $expr" =>
           val endnode = Node.TryBlockEnd(ch, table.newNodeUid())
           val trynode = Node.TryBlock(endnode.uid, t, None, ch, table.newNodeUid())

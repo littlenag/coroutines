@@ -27,6 +27,10 @@ trait AstCanonicalization[C <: Context] {
     override def traverse(tree: Tree): Unit = tree match {
       case q"$qual.coroutine[$_]($_)" if isCoroutinesPkg(qual) =>
         // no need to check further, this is checked in a different expansion
+      case q"$qual.next[$_]()" if isCoroutinesPkg(qual) =>
+        c.abort(
+          tree.pos,
+          "The next statement only be invoked directly inside the coroutine. ")
       case q"$qual.yieldval[$_]($_)" if isCoroutinesPkg(qual) =>
         c.abort(
           tree.pos,
@@ -41,14 +45,14 @@ trait AstCanonicalization[C <: Context] {
           "call statement or declare another coroutine.")
       case q"$qual.call($co.apply(..$args))" if isCoroutinesPkg(qual) =>
         // no need to check further, the call macro will validate the coroutine type
-      case q"$co.apply(..$args)" if isCoroutineDefMarker(typer.typeOf(co)) =>
+      case q"$co.apply(..$args)" if isCoroutineFactoryDefMarker(typer.typeOf(co)) =>
         c.abort(
           tree.pos,
           "Coroutine blueprints can only be invoked directly inside the coroutine. " +
           "Nested classes, functions or for-comprehensions, should either use the " +
           "call statement or declare another coroutine.")
       case q"$co.apply[..$_](..$args)(..$_)"
-        if isCoroutineDefMarker(typer.typeOf(co)) =>
+        if isCoroutineFactoryDefMarker(typer.typeOf(co)) =>
         c.abort(
           tree.pos,
           "Coroutine blueprints can only be invoked directly inside the coroutine. " +
@@ -66,24 +70,25 @@ trait AstCanonicalization[C <: Context] {
     }
   }
 
-  private def canonicalize(tree: Tree)(
-    implicit typer: ByTreeTyper[c.type]
-  ): (List[Tree], Tree) = tree match {
+  private def canonicalize(tree: Tree)(implicit typer: ByTreeTyper[c.type]): (List[Tree], Tree) = tree match {
+
     case q"$r.`package`" =>
       // package selection
       (Nil, tree)
+
     case q"$r.$member" if !tree.symbol.isPackage =>
       // selection
       val (rdecls, rident) = canonicalize(r)
-      val localvarname = TermName(c.freshName("x"))
+      val localvarname = TermName(c.freshName("xs"))
       val localvartree = q"val $localvarname = $rident.$member"
       (rdecls ++ List(localvartree), q"$localvarname")
+
     case q"$r.&&($arg)"
       if typer.typeOf(r) =:= typeOf[Boolean] && typer.typeOf(arg) =:= typeOf[Boolean] =>
       // short-circuit boolean and
       val (conddecls, condident) = canonicalize(r)
       val (thendecls, thenident) = canonicalize(arg)
-      val localvarname = TermName(c.freshName("x"))
+      val localvarname = TermName(c.freshName("xn"))
       val decls = List(
         q"var $localvarname = null.asInstanceOf[Boolean]",
         q"""
@@ -102,7 +107,7 @@ trait AstCanonicalization[C <: Context] {
       // short-circuit boolean or
       val (conddecls, condident) = canonicalize(r)
       val (elsedecls, elseident) = canonicalize(arg)
-      val localvarname = TermName(c.freshName("x"))
+      val localvarname = TermName(c.freshName("xo"))
       val decls = List(
         q"var $localvarname = null.asInstanceOf[Boolean]",
         q""" 
@@ -116,6 +121,7 @@ trait AstCanonicalization[C <: Context] {
         """
       )
       (decls, q"$localvarname")
+
     case q"$selector[..$tpts](...$paramss)" if tpts.length > 0 || paramss.length > 0 =>
       // application
       val (rdecls, newselector) = selector match {
@@ -127,14 +133,16 @@ trait AstCanonicalization[C <: Context] {
       }
       for (tpt <- tpts) disallowCoroutinesIn(tpt)
       val (pdeclss, pidents) = paramss.map(_.map(canonicalize).unzip).unzip
-      val localvarname = TermName(c.freshName("x"))
+      val localvarname = TermName(c.freshName("xa"))
       val localvartree = q"val $localvarname = $newselector[..$tpts](...$pidents)"
       (rdecls ++ pdeclss.flatten.flatten ++ List(localvartree), q"$localvarname")
+
     case q"$r[..$tpts]" if tpts.length > 0 =>
       // type application
       for (tpt <- tpts) disallowCoroutinesIn(tpt)
       val (rdecls, rident) = canonicalize(r)
       (rdecls, q"$rident[..$tpts]")
+
     case q"$x = $v" =>
       // assignment
       val (xdecls, xident) = canonicalize(x)
@@ -170,7 +178,7 @@ trait AstCanonicalization[C <: Context] {
     case q"try $body catch { case ..$cases } finally $expr" =>
       // try
       val tpe = typer.typeOf(tree)
-      val localvarname = TermName(c.freshName("x"))
+      val localvarname = TermName(c.freshName("xt"))
       val exceptionvarname = TermName(c.freshName("e"))
       val bindingname = TermName(c.freshName("t"))
       val (bodydecls, bodyident) = canonicalize(body)
@@ -214,7 +222,7 @@ trait AstCanonicalization[C <: Context] {
       val (conddecls, condident) = canonicalize(cond)
       val (thendecls, thenident) = canonicalize(thenbranch)
       val (elsedecls, elseident) = canonicalize(elsebranch)
-      val localvarname = TermName(c.freshName("x"))
+      val localvarname = TermName(c.freshName("xif"))
       val tpe = typer.typeOf(tree)
       val decls = List(
         q"var $localvarname = null.asInstanceOf[$tpe]",
@@ -232,7 +240,7 @@ trait AstCanonicalization[C <: Context] {
       (decls, q"$localvarname")
     case q"$expr match { case ..$cases }" =>
       // pattern match
-      val localvarname = TermName(c.freshName("x"))
+      val localvarname = TermName(c.freshName("xm"))
       val (exdecls, exident) = canonicalize(expr)
       val tpe = typer.typeOf(tree)
       val extpe = typer.typeOf(expr)
@@ -283,7 +291,7 @@ trait AstCanonicalization[C <: Context] {
       // The correct solution is to duplicate the trees so that duplicate value decls in
       // the two trees get fresh names.
       val (xdecls1, xident1) = canonicalize(cond)
-      val localvarname = TermName(c.freshName("x"))
+      val localvarname = TermName(c.freshName("xw"))
       val decls = if (xdecls0 != Nil) {
         xdecls0 ++ List(
           q"var $localvarname = $xident0",
@@ -308,7 +316,7 @@ trait AstCanonicalization[C <: Context] {
       // trees and rename the variables.
       val (xdecls0, xident0) = canonicalize(cond)
       val (xdecls1, xident1) = canonicalize(cond)
-      val localvarname = TermName(c.freshName("x"))
+      val localvarname = TermName(c.freshName("xd"))
       val decls = if (xdecls0 != Nil) List(
         q"""
           {
@@ -358,7 +366,7 @@ trait AstCanonicalization[C <: Context] {
       (Nil, tree)
     case block @ Block(stats, expr) =>
       // block
-      val localvarname = TermName(c.freshName("x"))
+      val localvarname = TermName(c.freshName("xb"))
       val (statdecls, statidents) = stats.map(canonicalize).unzip
       val (exprdecls, exprident) = canonicalize(q"$localvarname = $expr")
       val tpe = Option(typer.typeOf(expr)) match {

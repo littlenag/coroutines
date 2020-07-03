@@ -9,6 +9,9 @@ package object coroutines {
     "Use `call(<coroutine>(<arg0>, ..., <argN>))` instead if you want to " +
     "start a new coroutine."
 
+  def next[T](): T = {
+    sys.error("Next allowed only inside coroutines.")
+  }
 
   def yieldval[T](x: T): Unit = {
     sys.error("Yield allowed only inside coroutines.")

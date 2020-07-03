@@ -386,7 +386,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
         await(Future("ho"))
       } catch {
         case e: RuntimeException => await(Future("oh"))
-        case _ => await(Future("ho"))
+        case _: Throwable => await(Future("ho"))
       }
       await(Future("oh"))
     }

@@ -11,6 +11,55 @@ that introduces first-class coroutines.
 
 This library directly builds on [Storm Enroute Coroutines](http://storm-enroute.com/coroutines).
 
+# Enhancements
+
+cross compile to kotlin coroutines?
+ - not likely, this should be tailored for stream transformations
+
+cross compile to a state monad?
+ - for flink compat?
+
+build same kotlin system for scala coroutines?
+ - not likely
+
+scalajs interop?
+ - should at least try to compile to scalajs
+
+kotlin interop?
+
+compile to state machine vs control flow graph (cfg)?
+
+performance?
+ - get benchmarks working again
+ - compare against
+   - parsers
+   - fn => (behavior, fn)
+   - scala-async
+   - kotlin
+   - state monad
+
+debugging?
+
+scala-async
+ - compile to state-machine?
+
+dotty?
+ - would require an entire rewrite
+
+resume with value, like python coroutines?
+ - working on it
+
+kotlin launch and schedulers let coroutines act like futures
+ - this would need to be part of a more general coroutines library
+
+compile for comprehensions to while iterator where possible
+
+zio interop?
+ - good way to control effects
+
+
+# Misc
+
 Check out the [Scala Coroutines website](http://storm-enroute.com/coroutines) for more info!
 
 Service            | Status | Description

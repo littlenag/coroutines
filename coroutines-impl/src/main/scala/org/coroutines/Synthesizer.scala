@@ -1,11 +1,7 @@
 package org.coroutines
 
-//import org.coroutines.common._
-//import scala.annotation.tailrec
 import scala.collection._
-//import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-
 
 /** Synthesizes all coroutine-related functionality.
  */
@@ -308,8 +304,8 @@ with AstCanonicalization[C] {
 
     // transform to two operand assignment form
     val typedtaflambda = canonicalizeTree(rawlambda)
-    // println(typedtaflambda)
-    // println(typedtaflambda.tpe)
+    println(typedtaflambda)
+    println(typedtaflambda.tpe)
 
     implicit val table = new Table(typedtaflambda)
     
@@ -388,7 +384,7 @@ with AstCanonicalization[C] {
   def call[R: WeakTypeTag](tree: Tree): Tree = {
     val (receiver, args) = tree match {
       case q"$r.apply(..$args)" =>
-        if (!isCoroutineDefMarker(r.tpe))
+        if (!isCoroutineFactoryDefMarker(r.tpe))
           c.abort(r.pos,
             s"Receiver must be a coroutine.\n" +
             s"required: Coroutine[_, ${implicitly[WeakTypeTag[R]]}]\n" +
