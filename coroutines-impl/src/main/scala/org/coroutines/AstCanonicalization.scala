@@ -356,17 +356,17 @@ trait AstCanonicalization[C <: Context] {
         new NestedContextValidator().traverse(tree)
       }
       (Nil, tree)
-    case Block(stats, expr) =>
+    case block @ Block(stats, expr) =>
       // block
       val localvarname = TermName(c.freshName("x"))
       val (statdecls, statidents) = stats.map(canonicalize).unzip
       val (exprdecls, exprident) = canonicalize(q"$localvarname = $expr")
-      val tpe = typer.typeOf(expr)
-      println(s"!!!!!! $tpe")
-      val decls =
-        List(q"var $localvarname = null.asInstanceOf[${tpe.widen}]") ++
-        statdecls.flatten ++
-        exprdecls
+      val tpe = Option(typer.typeOf(expr)) match {
+        case Some(tpe) => List(q"var $localvarname = null.asInstanceOf[${tpe.widen}]")
+        case None =>
+          List(q"var $localvarname = null.asInstanceOf[${c.typecheck(block).tpe}]")
+      }
+      val decls = tpe ++ statdecls.flatten ++ exprdecls
       (decls, q"$localvarname")
     case tpt: TypeTree =>
       // type trees

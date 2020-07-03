@@ -2,6 +2,12 @@ package org.coroutines
 
 case class CoroutineStoppedException() extends Exception
 
+/**
+ * Pre-invocation type
+ * @param blueprint
+ * @tparam S
+ * @tparam R
+ */
 class ~~~>[@specialized S, R] private[coroutines] (
                                                     val blueprint: Coroutine[S, R]
                                                   ) extends Coroutine.DefMarker[(S, R)] {
@@ -13,6 +19,12 @@ class ~~~>[@specialized S, R] private[coroutines] (
     blueprint.asInstanceOf[Coroutine._0[S, R]].$push(co)
 }
 
+/**
+ * Pre-invocation type
+ * @param blueprint
+ * @tparam T
+ * @tparam YR
+ */
 class ~~>[T, YR] private[coroutines] (
                                        val blueprint: Coroutine.DefMarker[YR]
                                      ) extends Coroutine.DefMarker[YR] {
@@ -30,6 +42,12 @@ class ~~>[T, YR] private[coroutines] (
   }
 }
 
+/**
+ * Pre-invocation type
+ * @param blueprint
+ * @tparam PS
+ * @tparam YR
+ */
 class ~>[PS, YR] private[coroutines] (
                                        val blueprint: Coroutine.DefMarker[YR]
                                      ) extends Coroutine.DefMarker[YR] {

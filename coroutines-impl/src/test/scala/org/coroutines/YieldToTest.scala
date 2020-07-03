@@ -1,11 +1,8 @@
 package org.coroutines
 
-
-
 import org.scalatest._
 import scala.collection._
 import scala.util.Failure
-
 
 
 class YieldToTest extends funsuite.AnyFunSuite {

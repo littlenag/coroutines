@@ -296,13 +296,16 @@ with AstCanonicalization[C] {
       specArity1(argtpts, yldtpt, rettpt)
     } else if (argtpts.length == 2) {
       specArity2(argtpts, yldtpt, rettpt)
-    } else if (argtpts.length == 0 || argtpts.length > 2) {
+    } else if (argtpts.isEmpty || argtpts.length > 2) {
       val nme = TypeName(s"_${argtpts.size}")
       (tq"_root_.org.coroutines.Coroutine.$nme", argtpts :+ yldtpt :+ rettpt)
     } else sys.error("Unreachable case.")
   }
 
   def synthesize(rawlambda: Tree): Tree = {
+    //FIXME 2.13 fails with null type, typecheck maybe?
+    //c.typecheck(rawlambda)
+
     // transform to two operand assignment form
     val typedtaflambda = canonicalizeTree(rawlambda)
     // println(typedtaflambda)

@@ -5,6 +5,11 @@ import scala.annotation.tailrec
 import scala.reflect.macros.whitebox.Context
 import scala.util.{Try, Success, Failure}
 
+/**
+ * The object that generates instances of callable coroutines.
+ * @tparam Y
+ * @tparam R
+ */
 trait Coroutine[@specialized Y, R] extends Coroutine.DefMarker[(Y, R)] {
   def $enter(c: Coroutine.Instance[Y, R]): Unit
   def $assignyield(c: Coroutine.Instance[Y, R], v: Y): Unit = {
@@ -313,6 +318,7 @@ object Coroutine {
     new Synthesizer[c.type](c).call(f)
   }
 
+  // Requires 0 arguments to create a coroutine instance
   abstract class _0[@specialized T, R] extends Coroutine[T, R] {
     def apply(): R
     def $call(): Instance[T, R]
@@ -320,6 +326,7 @@ object Coroutine {
     override def toString = s"Coroutine._0@${System.identityHashCode(this)}"
   }
 
+  // Requires 1 argument to create a coroutine instance
   abstract class _1[A0, @specialized T, R] extends Coroutine[T, R] {
     def apply(a0: A0): R
     def $call(a0: A0): Instance[T, R]
@@ -327,6 +334,7 @@ object Coroutine {
     override def toString = s"Coroutine._1@${System.identityHashCode(this)}"
   }
 
+  // Requires 2 arguments to create a coroutine instance
   abstract class _2[A0, A1, @specialized T, R] extends Coroutine[T, R] {
     def apply(a0: A0, a1: A1): R
     def $call(a0: A0, a1: A1): Instance[T, R]
@@ -334,6 +342,7 @@ object Coroutine {
     override def toString = s"Coroutine._2@${System.identityHashCode(this)}"
   }
 
+  // Requires 3 arguments to create a coroutine instance
   abstract class _3[A0, A1, A2, @specialized T, R] extends Coroutine[T, R] {
     def apply(a0: A0, a1: A1, a2: A2): R
     def $call(a0: A0, a1: A1, a2: A2): Instance[T, R]

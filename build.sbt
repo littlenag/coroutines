@@ -6,7 +6,7 @@ lazy val scala211 = "2.11.12"
 lazy val supportedScalaVersions = List(scala213, scala212, scala211)
 
 ThisBuild / organization := "io.github.littlenag"
-ThisBuild / scalaVersion := scala212
+ThisBuild / scalaVersion := scala213
 
 ThisBuild / resolvers ++= Seq(
   "Sonatype OSS Snapshots" at
