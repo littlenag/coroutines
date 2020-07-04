@@ -37,8 +37,13 @@ trait Analyzer[C <: Context] {
     val tpe = sym.info
     val name = sym.name.toTermName
     def stackpos: (Int, Int) = {
-      assert(rawstackpos != null, s"Variable '$sym' without computed stack position.")
-      rawstackpos
+      //assert(rawstackpos != null, s"Variable '$sym' without computed stack position.")
+      if (rawstackpos == null) {
+        c.warning(c.enclosingPosition, s"Variable '$sym' without computed stack position.")
+        (-1, -1)
+      } else {
+        rawstackpos
+      }
     }
     def isWide = tpe =:= typeOf[Double] || tpe =:= typeOf[Long]
     def width: Int = if (isWide) 2 else 1
@@ -384,6 +389,8 @@ trait Analyzer[C <: Context] {
   object CoroutineOp {
     def unapply(t: Tree): Option[Tree] = t match {
       case q"$qual.`package`.coroutine[$_]($_)" if isCoroutinesPkg(qual) =>
+        Some(t)
+      case q"$qual.`package`.pullcell[$_]()" if isCoroutinesPkg(qual) =>
         Some(t)
       case q"$qual.`package`.next[$_]()" if isCoroutinesPkg(qual) =>
         Some(t)

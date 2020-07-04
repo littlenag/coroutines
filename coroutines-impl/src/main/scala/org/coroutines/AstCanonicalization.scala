@@ -27,14 +27,18 @@ trait AstCanonicalization[C <: Context] {
     override def traverse(tree: Tree): Unit = tree match {
       case q"$qual.coroutine[$_]($_)" if isCoroutinesPkg(qual) =>
         // no need to check further, this is checked in a different expansion
+      case q"$qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
+        c.abort(
+          tree.pos,
+          "The pullcell statement is for the inner workings of a coroutine. It should not be invoked by user code.")
       case q"$qual.next[$_]()" if isCoroutinesPkg(qual) =>
         c.abort(
           tree.pos,
-          "The next statement only be invoked directly inside the coroutine. ")
+          "The next statement must only be invoked directly inside the coroutine. ")
       case q"$qual.yieldval[$_]($_)" if isCoroutinesPkg(qual) =>
         c.abort(
           tree.pos,
-          "The yieldval statement only be invoked directly inside the coroutine. " +
+          "The yieldval statement must only be invoked directly inside the coroutine. " +
           "Nested classes, functions or for-comprehensions, should either use the " +
           "call statement or declare another coroutine.")
       case q"$qual.yieldto[$_]($_)" if isCoroutinesPkg(qual) =>
@@ -380,16 +384,33 @@ trait AstCanonicalization[C <: Context] {
       // type trees
       disallowCoroutinesIn(tpt)
       (Nil, tree)
+
+    case q"$mods val $v: $tpt = $qual.next[$nt]()" if isCoroutinesPkg(qual) =>
+      // val
+      val (rhsdecls1, _) = canonicalize(q"$qual.next[$nt]()")
+      val (rhsdecls2, rhsident) = canonicalize(q"$qual.pullcell[$nt]()")
+      val decls = rhsdecls1 ++ rhsdecls2 ++ List(q"$mods val $v: $tpt = $rhsident")
+      (decls, q"")
+
+    case q"$mods var $v: $tpt = $qual.next[$nt]()" if isCoroutinesPkg(qual) =>
+      // var
+      val (rhsdecls1, _) = canonicalize(q"$qual.next[$nt]()")
+      val (rhsdecls2, rhsident) = canonicalize(q"$qual.pullcell[$nt]()")
+      val decls = rhsdecls1 ++ rhsdecls2 ++ List(q"$mods var $v: $tpt = $rhsident")
+      (decls, q"")
+
     case q"$mods val $v: $tpt = $rhs" =>
       // val
       val (rhsdecls, rhsident) = canonicalize(rhs)
       val decls = rhsdecls ++ List(q"$mods val $v: $tpt = $rhsident")
       (decls, q"")
+
     case q"$mods var $v: $tpt = $rhs" =>
       // var
       val (rhsdecls, rhsident) = canonicalize(rhs)
       val decls = rhsdecls ++ List(q"$mods var $v: $tpt = $rhsident")
       (decls, q"")
+
     case q"$mods def $tname[..$tparams](...$paramss): $tpt = $rhs" =>
       // method
       val decls = List(

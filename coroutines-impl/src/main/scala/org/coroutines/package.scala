@@ -13,6 +13,10 @@ package object coroutines {
     sys.error("Next allowed only inside coroutines.")
   }
 
+  private[coroutines] def pullcell[T](): T = {
+    sys.error("pullcell allowed only inside coroutines.")
+  }
+
   def yieldval[T](x: T): Unit = {
     sys.error("Yield allowed only inside coroutines.")
   }

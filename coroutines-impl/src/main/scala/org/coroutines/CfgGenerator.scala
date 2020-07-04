@@ -641,16 +641,7 @@ trait CfgGenerator[C <: Context] {
           $$suspend($cparam)
           return
         """
-
-        val resumetree = tree match {
-          case q"$_ val $name: $_ = $qual.next[$_]()" if isCoroutinesPkg(qual) =>
-            q"""val $name = $cparam.$$cell.getOrElse(throw new RuntimeException("Expected cell value"))"""
-
-          case q"$_ var $name: $_ = $qual.next[$_]()" if isCoroutinesPkg(qual) =>
-            q"""var $name = $cparam.$$cell.getOrElse(throw new RuntimeException("Expected cell value"))"""
-        }
-
-        val z1 = z.append(exittree).append(resumetree)
+        val z1 = z.append(exittree)
         z1
       }
       override def stackVars(sub: SubCfg) = storePointVarsInChain(sub).map(_._1)
@@ -669,6 +660,44 @@ trait CfgGenerator[C <: Context] {
       }
       def copyWithoutSuccessors(nch: Chain) = Next(tree, nch, uid)
     }
+
+    case class PullCell(tree: Tree, chain: Chain, uid: Long) extends Node {
+      def successors = successor.toSeq
+      override def code = tree
+
+      def emit(z: Zipper, seen: mutable.Set[Node], subgraph: SubCfg)(implicit cc: CanCall, table: Table): Zipper = {
+        val cparam = table.names.coroutineParam
+
+        val resumetree = tree match {
+          case q"$_ val $name: $_ = $qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
+            //val localvarname = TermName(c.freshName("xax"))
+            q"""val ${name} = $cparam.$$cell.getOrElse(throw new RuntimeException("Expected cell value"))"""
+
+          case q"$_ var $name: $_ = $qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
+            //val localvarname = TermName(c.freshName("xbx"))
+            q"""var ${name} = $cparam.$$cell.getOrElse(throw new RuntimeException("Expected cell value"))"""
+        }
+
+        val z1 = z.append(resumetree)
+        z1
+      }
+      override def stackVars(sub: SubCfg) = storePointVarsInChain(sub).map(_._1)
+      def extract(
+                   prevchain: Chain, seen: mutable.Map[Node, Node], ctx: ExtractSubgraphContext,
+                   subgraph: SubCfg
+                 )(implicit table: Table): Node = {
+        val nthis = this.copyWithoutSuccessors(prevchain)
+        seen(this) = nthis
+        nthis.updateBlockInfo()
+
+        this.addSuccessorsToNodeFront(ctx)
+        ctx.exitPoints(subgraph)(nthis) = successor.get.uid
+
+        nthis
+      }
+      def copyWithoutSuccessors(nch: Chain) = PullCell(tree, nch, uid)
+    }
+
 
     case class YieldVal(
       tree: Tree, chain: Chain, uid: Long
@@ -1078,6 +1107,19 @@ trait CfgGenerator[C <: Context] {
         case q"$_ var $_: $_ = $qual.next[$_]()" if isCoroutinesPkg(qual) =>
           val nch = ch.withDecl(t, false)
           val n = Node.Next(t, ch, table.newNodeUid())
+          val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
+          n.successor = Some(u)
+          (n, u)
+
+        case q"$_ val $_: $_ = $qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
+          val nch = ch.withDecl(t, false)
+          val n = Node.PullCell(t, ch, table.newNodeUid())
+          val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
+          n.successor = Some(u)
+          (n, u)
+        case q"$_ var $_: $_ = $qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
+          val nch = ch.withDecl(t, false)
+          val n = Node.PullCell(t, ch, table.newNodeUid())
           val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
           n.successor = Some(u)
           (n, u)
