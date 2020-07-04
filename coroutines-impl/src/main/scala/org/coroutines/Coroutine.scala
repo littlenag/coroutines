@@ -147,7 +147,7 @@ object Coroutine {
       } else throw new CoroutineStoppedException
     }
 
-    /** Advances the coroutine to the next suspend (yield or next) point.
+    /** Advances the coroutine to the next suspend (yield or suspend) point.
      *
      *  @return `true` if resume can be called again, `false` otherwise.
      *  @throws CoroutineStoppedException If the coroutine is not live.
