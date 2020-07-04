@@ -2,6 +2,8 @@ package org.coroutines
 
 import org.scalatest._
 import scala.coroutines.common.Util._
+
+
 /**
  *
  */
@@ -35,17 +37,5 @@ class NextValTest extends funsuite.AnyFunSuite {
     assert(!e.resume)
     assert(e.isCompleted)
   }
-
-//    val echo /*: String ~~~> Unit */ = coroutine { () =>
-//      val asdf = yieldval("123")
-//
-//      ()
-//    }
-//
-//    val c: String <~> Unit = call(echo())
-//    assert(!c.resume)
-//    assert(!c.resumeWithValue("5"))
-//    assert(c.value == "5")
-//    assert(c.isCompleted)
 
 }
