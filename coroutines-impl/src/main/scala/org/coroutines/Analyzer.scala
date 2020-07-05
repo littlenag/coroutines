@@ -392,6 +392,8 @@ trait Analyzer[C <: Context] {
         Some(t)
       case q"$qual.`package`.pullcell[$_]()" if isCoroutinesPkg(qual) =>
         Some(t)
+      case q"$qual.`package`.suspend()" if isCoroutinesPkg(qual) =>
+        Some(t)
       case q"$qual.`package`.next[$_]()" if isCoroutinesPkg(qual) =>
         Some(t)
       case q"$qual.`package`.yieldval[$_]($_)" if isCoroutinesPkg(qual) =>

@@ -99,9 +99,12 @@ object AsyncAwait {
       }
 
       override def traverse(tree: Tree): Unit = tree match {
+        case q"$qual.suspend()" if isCoroutinesPkg(qual) =>
+          c.abort(tree.pos,
+            "The 'suspend()' statement only be invoked directly inside the coroutine. ")
         case q"$qual.next[$_]()" if isCoroutinesPkg(qual) =>
           c.abort(tree.pos,
-            "The 'next()' statement only be invoked directly inside the coroutine. ")
+            "The 'next[T]()' statement only be invoked directly inside the coroutine. ")
         case q"$qual.yieldval[$_]($_)" if isCoroutinesPkg(qual) =>
           c.abort(tree.pos,
             "The yieldval statement only be invoked directly inside the coroutine. " +

@@ -69,6 +69,15 @@ trait CfgGenerator[C <: Context] {
       finalzipper
     }
 
+    /**
+     * Writes out what will becomes the code for the final macro.
+     * @param z
+     * @param seen
+     * @param subgraph
+     * @param cc
+     * @param t
+     * @return
+     */
     def emit(
       z: Zipper, seen: mutable.Set[Node], subgraph: SubCfg
     )(implicit cc: CanCall, t: Table): Zipper
@@ -627,7 +636,7 @@ trait CfgGenerator[C <: Context] {
       }
     }
 
-    case class Next(tree: Tree, chain: Chain, uid: Long) extends Node {
+    case class Suspend(tree: Tree, chain: Chain, uid: Long) extends Node {
       def successors = successor.toSeq
       override def code = tree
 
@@ -658,7 +667,7 @@ trait CfgGenerator[C <: Context] {
 
         nthis
       }
-      def copyWithoutSuccessors(nch: Chain) = Next(tree, nch, uid)
+      def copyWithoutSuccessors(nch: Chain) = Suspend(tree, nch, uid)
     }
 
     case class PullCell(tree: Tree, chain: Chain, uid: Long) extends Node {
@@ -670,18 +679,18 @@ trait CfgGenerator[C <: Context] {
 
         val resumetree = tree match {
           case q"$_ val $name: $_ = $qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
-            //val localvarname = TermName(c.freshName("xax"))
             q"""val ${name} = $cparam.$$cell.getOrElse(throw new RuntimeException("Expected cell value"))"""
 
           case q"$_ var $name: $_ = $qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
-            //val localvarname = TermName(c.freshName("xbx"))
             q"""var ${name} = $cparam.$$cell.getOrElse(throw new RuntimeException("Expected cell value"))"""
         }
 
         val z1 = z.append(resumetree)
         z1
       }
-      override def stackVars(sub: SubCfg) = storePointVarsInChain(sub).map(_._1)
+
+      //override def stackVars(sub: SubCfg) = storePointVarsInChain(sub).map(_._1)
+
       def extract(
                    prevchain: Chain, seen: mutable.Map[Node, Node], ctx: ExtractSubgraphContext,
                    subgraph: SubCfg
@@ -1098,26 +1107,26 @@ trait CfgGenerator[C <: Context] {
   def genControlFlowGraph(args: List[Tree], body: Tree, tpt: Tree)(implicit table: Table): Cfg = {
     def traverse(t: Tree, ch: Chain): (Node, Node) = {
       t match {
-        case q"$_ val $_: $_ = $qual.next[$_]()" if isCoroutinesPkg(qual) =>
+        case q"$_ val $_: $_ = $qual.suspend()" if isCoroutinesPkg(qual) =>
           val nch = ch.withDecl(t, false)
-          val n = Node.Next(t, ch, table.newNodeUid())
+          val n = Node.Suspend(t, ch, table.newNodeUid())
           val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
           n.successor = Some(u)
           (n, u)
-        case q"$_ var $_: $_ = $qual.next[$_]()" if isCoroutinesPkg(qual) =>
+        case q"$_ var $_: $_ = $qual.suspend()" if isCoroutinesPkg(qual) =>
           val nch = ch.withDecl(t, false)
-          val n = Node.Next(t, ch, table.newNodeUid())
+          val n = Node.Suspend(t, ch, table.newNodeUid())
           val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
           n.successor = Some(u)
           (n, u)
 
-        case q"$_ val $_: $_ = $qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
+        case q"$_ val $name: $_ = $qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
           val nch = ch.withDecl(t, false)
           val n = Node.PullCell(t, ch, table.newNodeUid())
           val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
           n.successor = Some(u)
           (n, u)
-        case q"$_ var $_: $_ = $qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
+        case q"$_ var $name: $_ = $qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
           val nch = ch.withDecl(t, false)
           val n = Node.PullCell(t, ch, table.newNodeUid())
           val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())

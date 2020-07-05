@@ -56,6 +56,11 @@ compile for comprehensions to while iterator where possible
 
 zio interop?
  - good way to control effects
+ 
+ 
+TODO
+ - abstract over arity, probably use quill like semantics
+ - coroutine constructor inside trait, specialize to particular yield and next values (stream in/out values)
 
 
 # Misc

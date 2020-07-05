@@ -27,10 +27,14 @@ trait AstCanonicalization[C <: Context] {
     override def traverse(tree: Tree): Unit = tree match {
       case q"$qual.coroutine[$_]($_)" if isCoroutinesPkg(qual) =>
         // no need to check further, this is checked in a different expansion
+      case q"$qual.suspend()" if isCoroutinesPkg(qual) =>
+        c.abort(
+          tree.pos,
+          "The 'suspend()' statement is for the inner workings of a coroutine. It should not be invoked by user code.")
       case q"$qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
         c.abort(
           tree.pos,
-          "The pullcell statement is for the inner workings of a coroutine. It should not be invoked by user code.")
+          "The 'pullcell[T]()' statement is for the inner workings of a coroutine. It should not be invoked by user code.")
       case q"$qual.next[$_]()" if isCoroutinesPkg(qual) =>
         c.abort(
           tree.pos,
@@ -385,16 +389,23 @@ trait AstCanonicalization[C <: Context] {
       disallowCoroutinesIn(tpt)
       (Nil, tree)
 
+    // next[T]() get transformed into a suspend/pullcell pair
     case q"$mods val $v: $tpt = $qual.next[$nt]()" if isCoroutinesPkg(qual) =>
+//      // val
+//      val (rhsdecls1, _) = canonicalize(q"$qual.suspend()")
+//      val (rhsdecls2, rhsident) = canonicalize(q"$qual.pullcell[$nt]()")
+//      val decls = rhsdecls1 ++ rhsdecls2 ++ List(q"$mods val $v: $tpt = $rhsident")
+//      (decls, q"")
+
       // val
-      val (rhsdecls1, _) = canonicalize(q"$qual.next[$nt]()")
-      val (rhsdecls2, rhsident) = canonicalize(q"$qual.pullcell[$nt]()")
-      val decls = rhsdecls1 ++ rhsdecls2 ++ List(q"$mods val $v: $tpt = $rhsident")
+      val (rhsdecls1, _) = canonicalize(q"$qual.suspend()")
+      val decls = rhsdecls1 ++ List(q"$mods val $v: $tpt = $qual.pullcell[$nt]()")
       (decls, q"")
 
+    // next[T]() get transformed into a suspend/pullcell pair
     case q"$mods var $v: $tpt = $qual.next[$nt]()" if isCoroutinesPkg(qual) =>
       // var
-      val (rhsdecls1, _) = canonicalize(q"$qual.next[$nt]()")
+      val (rhsdecls1, _) = canonicalize(q"$qual.suspend()")
       val (rhsdecls2, rhsident) = canonicalize(q"$qual.pullcell[$nt]()")
       val decls = rhsdecls1 ++ rhsdecls2 ++ List(q"$mods var $v: $tpt = $rhsident")
       (decls, q"")
