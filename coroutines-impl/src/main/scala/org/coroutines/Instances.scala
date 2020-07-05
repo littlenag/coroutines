@@ -1,5 +1,6 @@
 package org.coroutines
 
+case class CoroutineResumeException() extends Exception
 case class CoroutineStoppedException() extends Exception
 
 /**

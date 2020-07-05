@@ -21,28 +21,12 @@ class NextValTest extends funsuite.AnyFunSuite {
 
     val e: String <~> Unit = call(echo())
     assert(e.resume)
+    assert(e.expectsResumeValue)
     assert(e.resumeWithValue("5"))
     assert(e.value == "5")
+    assert(!e.expectsResumeValue)
     assert(!e.resume)
     assert(e.isCompleted)
   }
-
-//  test("next in cell coroutine") {
-//    var cell: Option[String] = None
-//
-//    val echo : String ~~~> Unit =
-//      coroutine { () =>
-//        val c = cell.get
-//        yieldval(c)
-//        ()
-//      }
-//
-//    cell = Some("5")
-//    val e: String <~> Unit = call(echo())
-//    assert(e.resume)
-//    assert(e.value == "5")
-//    assert(!e.resume)
-//    assert(e.isCompleted)
-//  }
 
 }

@@ -15,10 +15,12 @@ trait Coroutine[@specialized Y, R] extends Coroutine.FactoryDefMarker[(Y, R)] {
   def $suspend(c: Coroutine.Instance[Y, R]): Unit = {
     c.$hasYield = false
     c.$yield = null.asInstanceOf[Y]
+    c.$expectsResumeValue = true
   }
   def $assignyield(c: Coroutine.Instance[Y, R], v: Y): Unit = {
     c.$hasYield = true
     c.$yield = v
+    c.$expectsResumeValue = false
   }
 
   def $assignresult(c: Coroutine.Instance[Y, R], v: R): Unit = c.$result = v
@@ -112,6 +114,7 @@ object Coroutine {
     var $hasYield: Boolean = false
     var $yield: Y = null.asInstanceOf[Y]
     var $result: R = null.asInstanceOf[R]
+    var $expectsResumeValue: Boolean = false
 
     // Single cell so that we can inject data on resume
     var $cell: Option[AnyRef] = None
@@ -133,18 +136,34 @@ object Coroutine {
       frame
     }
 
+    /** Is the coroutine awaiting a value?
+     *
+     * If so, then resumeWithValue must be called to resume the coroutine. Otherwise
+     * no value is expected and resume can be called as normal.
+     *
+     *  @return `true` if resumeWithValue must be used to resume, `false` otherwise.
+     *  @throws CoroutineStoppedException If the coroutine is not live.
+     */
+    final def expectsResumeValue: Boolean = {
+      if (isLive) {
+        $expectsResumeValue
+      } else throw CoroutineStoppedException()
+    }
+
     /** Supplies a value for the coroutine, and advances to the next yield point.
      *
      *  @return `true` if resume can be called again, `false` otherwise.
      *  @throws CoroutineStoppedException If the coroutine is not live.
      */
     final def resumeWithValue[T](value:T): Boolean = {
+      if (!$expectsResumeValue)
+        throw CoroutineResumeException()
       if (isLive) {
         $hasYield = false
         $yield = null.asInstanceOf[Y]
         $cell = Some(value).asInstanceOf[Option[AnyRef]]
         Coroutine.resume[Y, R](this, this)
-      } else throw new CoroutineStoppedException
+      } else throw CoroutineStoppedException()
     }
 
     /** Advances the coroutine to the next suspend (yield or suspend) point.
@@ -153,11 +172,13 @@ object Coroutine {
      *  @throws CoroutineStoppedException If the coroutine is not live.
      */
     final def resume: Boolean = {
+      if ($expectsResumeValue)
+        throw CoroutineResumeException()
       if (isLive) {
         $hasYield = false
         $yield = null.asInstanceOf[Y]
         Coroutine.resume[Y, R](this, this)
-      } else throw new CoroutineStoppedException
+      } else throw CoroutineStoppedException()
     }
 
     /** Calls `resume` until either the coroutine yields a value or returns.
