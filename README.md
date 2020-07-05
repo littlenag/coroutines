@@ -13,6 +13,10 @@ This library directly builds on [Storm Enroute Coroutines](http://storm-enroute.
 
 # Enhancements
 
+why not use a channel, like kotlin does, to let coroutines communicate?
+ - because it requires a scheduler!
+ - then this ends up just being a fancier Future, really not the goal
+
 cross compile to kotlin coroutines?
  - not likely, this should be tailored for stream transformations
 
