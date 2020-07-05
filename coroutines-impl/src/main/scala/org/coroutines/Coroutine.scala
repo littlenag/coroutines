@@ -142,7 +142,7 @@ object Coroutine {
       if (isLive) {
         $hasYield = false
         $yield = null.asInstanceOf[Y]
-        $cell = Option(value).asInstanceOf[Option[AnyRef]]
+        $cell = Some(value).asInstanceOf[Option[AnyRef]]
         Coroutine.resume[Y, R](this, this)
       } else throw new CoroutineStoppedException
     }

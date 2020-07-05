@@ -9,19 +9,22 @@ import scala.coroutines.common.Util._
  */
 class NextValTest extends funsuite.AnyFunSuite {
 
-  def ff() = 2
-
   test("next-val statement") {
 
     val echo : String ~~~> Unit = desugar {
       coroutine { () =>
-        val f = ff()
         val e = next[String]()
         yieldval(e)
-        val g = f
         ()
       }
     }
+
+    val e: String <~> Unit = call(echo())
+    assert(e.resume)
+    assert(e.resumeWithValue("5"))
+    assert(e.value == "5")
+    assert(!e.resume)
+    assert(e.isCompleted)
   }
 
 //  test("next in cell coroutine") {
