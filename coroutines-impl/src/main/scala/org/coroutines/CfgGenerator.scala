@@ -3,7 +3,6 @@ package org.coroutines
 import org.coroutines.common._
 import org.coroutines.common.Cache._
 import scala.collection._
-//import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
 /** Generates control flow graphs, and converts CFG nodes to ASTs.
@@ -670,43 +669,73 @@ trait CfgGenerator[C <: Context] {
       def copyWithoutSuccessors(nch: Chain) = Suspend(tree, nch, uid)
     }
 
-    case class PullCell(tree: Tree, chain: Chain, uid: Long) extends Node {
-      def successors = successor.toSeq
-      override def code = tree
+    case class PullCell(tree: Tree, chain: Chain, uid: Long) extends Statement {
 
-      def emit(z: Zipper, seen: mutable.Set[Node], subgraph: SubCfg)(implicit cc: CanCall, table: Table): Zipper = {
+      override def value = q"()"
+      override def code: Tree = {
+//        q""
+        tree match {
+          case q"$_ val $_: $_ = $rhs" => rhs
+          case q"$_ var $_: $_ = $rhs" => rhs
+        }
+      }
+
+      override def updateBlockInfo()(implicit table: Table) {
+        super.updateBlockInfo()
+        chain.info.decls(tree.symbol) = table(tree.symbol)
+      }
+
+      override def emit(z: Zipper, seen: mutable.Set[Node], subgraph: SubCfg)(implicit cc: CanCall, table: Table): Zipper = {
         val cparam = table.names.coroutineParam
 
         val resumetree = tree match {
-          case q"$_ val $name: $_ = $qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
-            q"""val ${name} = $cparam.$$cell.getOrElse(throw new RuntimeException("Expected cell value"))"""
+          case q"$_ val $name: $_ = $qual.pullcell[$tpe]()" if isCoroutinesPkg(qual) =>
+            q"""val ${name} = $cparam.$$cell.map(_.asInstanceOf[$tpe]).getOrElse(throw new RuntimeException("Expected cell value"))"""
 
-          case q"$_ var $name: $_ = $qual.pullcell[$_]()" if isCoroutinesPkg(qual) =>
-            q"""var ${name} = $cparam.$$cell.getOrElse(throw new RuntimeException("Expected cell value"))"""
+          case q"$_ var $name: $_ = $qual.pullcell[$tpe]()" if isCoroutinesPkg(qual) =>
+            q"""var ${name} = $cparam.$$cell.map(_.asInstanceOf[$tpe]).getOrElse(throw new RuntimeException("Expected cell value"))"""
         }
 
-        val z1 = z.append(resumetree)
-        z1
+        {
+          // inside the control-flow-construct, normal statement
+          successor match {
+            case Some(s) =>
+              if (s.isEmptyAtReturn) {
+                val exittree = genExit(this.value, subgraph)
+                z.append(exittree)
+              } else {
+                val z1 = z.append(resumetree)
+                s.markEmit(z1, seen, subgraph)
+              }
+            case None =>
+              val exittree = genExit(this.value, subgraph)
+              z.append(exittree)
+          }
+        }
       }
-
-      //override def stackVars(sub: SubCfg) = storePointVarsInChain(sub).map(_._1)
 
       def extract(
                    prevchain: Chain, seen: mutable.Map[Node, Node], ctx: ExtractSubgraphContext,
                    subgraph: SubCfg
                  )(implicit table: Table): Node = {
-        val nthis = this.copyWithoutSuccessors(prevchain)
+        val nchain = prevchain.withDecl(tree, false)
+        val nthis = this.copyWithoutSuccessors(nchain)
         seen(this) = nthis
         nthis.updateBlockInfo()
 
-        this.addSuccessorsToNodeFront(ctx)
-        ctx.exitPoints(subgraph)(nthis) = successor.get.uid
+        successor match {
+          case Some(s) =>
+            if (!seen.contains(s)) {
+              s.extract(nthis.chain, seen, ctx, subgraph)
+            }
+            nthis.successor = Some(seen(s))
+          case None =>
+        }
 
         nthis
       }
       def copyWithoutSuccessors(nch: Chain) = PullCell(tree, nch, uid)
     }
-
 
     case class YieldVal(
       tree: Tree, chain: Chain, uid: Long
@@ -1187,12 +1216,14 @@ trait CfgGenerator[C <: Context] {
           val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
           n.successor = Some(u)
           (n, u)
+
         case ValDecl(t) =>
           val nch = ch.withDecl(t, false)
           val n = Node.Decl(t, ch, table.newNodeUid())
           val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
           n.successor = Some(u)
           (n, u)
+
         case q"return $_" =>
           c.abort(t.pos, "Return statements not allowed inside coroutines.")
 

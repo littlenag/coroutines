@@ -178,11 +178,13 @@ trait AstCanonicalization[C <: Context] {
       // tuples
       val (xsdecls, xsidents) = xs.map(canonicalize).unzip
       (xsdecls.flatten, q"(..$xsidents)")
+
     case q"throw $expr" =>
       // throw
       val (decls, ident) = canonicalize(expr)
       val ndecls = decls ++ List(q"throw $ident")
       (ndecls, q"throw $ident")
+
     case q"try $body catch { case ..$cases } finally $expr" =>
       // try
       val tpe = typer.typeOf(tree)
@@ -354,11 +356,15 @@ trait AstCanonicalization[C <: Context] {
         """
       )
       (decls, q"()")
+
+    // TODO if this can be expressed as an iterator, then rewrite as a while loop
     case q"for (..$enums) $body" =>
       // for loop
       for (e <- enums) new NestedContextValidator().traverse(e)
       new NestedContextValidator().traverse(body)
       (Nil, tree)
+
+    // TODO if this can be expressed as an iterator, then rewrite as a while loop
     case q"for (..$enums) yield $body" =>
       // for-yield loop
       for (e <- enums) new NestedContextValidator().traverse(e)
@@ -392,15 +398,15 @@ trait AstCanonicalization[C <: Context] {
     // next[T]() get transformed into a suspend/pullcell pair
     case q"$mods val $v: $tpt = $qual.next[$nt]()" if isCoroutinesPkg(qual) =>
 //      // val
-//      val (rhsdecls1, _) = canonicalize(q"$qual.suspend()")
-//      val (rhsdecls2, rhsident) = canonicalize(q"$qual.pullcell[$nt]()")
-//      val decls = rhsdecls1 ++ rhsdecls2 ++ List(q"$mods val $v: $tpt = $rhsident")
-//      (decls, q"")
-
-      // val
       val (rhsdecls1, _) = canonicalize(q"$qual.suspend()")
-      val decls = rhsdecls1 ++ List(q"$mods val $v: $tpt = $qual.pullcell[$nt]()")
+      val (rhsdecls2, rhsident) = canonicalize(q"$qual.pullcell[$nt]()")
+      val decls = rhsdecls1 ++ rhsdecls2 ++ List(q"$mods val $v: $tpt = $rhsident")
       (decls, q"")
+
+//      // val
+//      val (rhsdecls1, _) = canonicalize(q"$qual.suspend()")
+//      val decls = rhsdecls1 ++ List(q"$mods val $v: $tpt = $qual.pullcell[$nt]()")
+//      (decls, q"")
 
     // next[T]() get transformed into a suspend/pullcell pair
     case q"$mods var $v: $tpt = $qual.next[$nt]()" if isCoroutinesPkg(qual) =>
