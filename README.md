@@ -13,6 +13,14 @@ This library directly builds on [Storm Enroute Coroutines](http://storm-enroute.
 
 # Enhancements
 
+types of coroutines
+* actor
+* reactor
+* transducer
+* generator
+
+use Suspend[T] as type?
+
 why not use a channel, like kotlin does, to let coroutines communicate?
  - because it requires a scheduler!
  - then this ends up just being a fancier Future, really not the goal

@@ -11,7 +11,6 @@ import scala.language.{postfixOps, reflectiveCalls}
 
 class TestException(msg: String = "") extends Throwable(msg)
 
-
 class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
   import AsyncAwait._
 

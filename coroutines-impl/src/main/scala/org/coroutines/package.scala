@@ -13,10 +13,12 @@ package object coroutines {
     sys.error("Next allowed only inside coroutines.")
   }
 
+  // Internal placeholder method
   private[coroutines] def suspend(): Unit = {
     sys.error("suspend allowed only inside coroutines.")
   }
 
+  // Internal placeholder method
   private[coroutines] def pullcell[T](): T = {
     sys.error("pullcell allowed only inside coroutines.")
   }

@@ -304,8 +304,10 @@ with AstCanonicalization[C] {
 
     // transform to two operand assignment form
     val typedtaflambda = canonicalizeTree(rawlambda)
-    println(typedtaflambda)
-    println(typedtaflambda.tpe)
+
+    // TODO replace with better logging
+    //println(typedtaflambda)
+    //println(typedtaflambda.tpe)
 
     implicit val table = new Table(typedtaflambda)
     
