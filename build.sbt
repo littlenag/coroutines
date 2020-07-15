@@ -79,6 +79,7 @@ lazy val `coroutines-impl` = (project in file("coroutines-impl"))
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "com.storm-enroute" %% "scalameter" % "0.19" % Test,
+      "com.chuusai" %% "shapeless" % "2.3.3",
       scalatestDep
     ),
     //testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),

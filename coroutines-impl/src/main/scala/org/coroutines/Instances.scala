@@ -12,7 +12,7 @@ case class CoroutineStoppedException() extends Exception
  * @tparam Y Yield Type
  * @tparam R Result Type
  */
-class ~~~>[@specialized Y, R] private[coroutines](val blueprint: Coroutine[Y, R]) extends Coroutine.FactoryDefMarker[(Y, R)] {
+class ~~~>[@specialized Y, R] private[coroutines](val blueprint: Coroutine._0[Y, R]) extends Coroutine.FactoryDefMarker[(Y, R)] {
   def apply(): R =
     sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)
   def $call(): Coroutine.Instance[Y, R] =
@@ -30,7 +30,7 @@ class ~~~>[@specialized Y, R] private[coroutines](val blueprint: Coroutine[Y, R]
  * @tparam T   1st param type, untupled
  * @tparam YR  Equals pair (S,R) => (YieldType ResultType)
  */
-class ~~>[T, YR] private[coroutines] (val blueprint: Coroutine.FactoryDefMarker[YR]) extends Coroutine.FactoryDefMarker[YR] {
+class ~~>[T, YR] private[coroutines] (val blueprint: Coroutine._1[T, _, _]) extends Coroutine.FactoryDefMarker[YR] {
 
   def apply[@specialized Y, R](t: T)(implicit e: (Y, R) =:= YR): R = {
     sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)

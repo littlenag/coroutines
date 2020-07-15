@@ -35,7 +35,14 @@ package object coroutines {
 
   // Y = Yield Type
   // R = Return Type
-  def coroutine[Y, R](f: Any): Any = macro Coroutine.synthesize
+  //def coroutine[Y, R](f: Any): Any = macro Coroutine.synthesize
+
+  def coroutine[Y, R](f: () => R): Coroutine._0[_, R] = macro Coroutine.synthesize
+  def coroutine[T1, Y, R](f: T1 => R): Coroutine._1[T1, _, R] = macro Coroutine.synthesize
+  def coroutine[T1, T2, Y, R](f: (T1, T2) => R): Coroutine._2[T1, T2, _, R] = macro Coroutine.synthesize
+  def coroutine[T1, T2, T3, Y, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, _, R] = macro Coroutine.synthesize
+
+  //def coroutine[Y, R, F](f: F): Coroutine.FactoryDefMarker[(Y, R)] = macro Coroutine.synthesize
 
   /* syntax sugar */
 

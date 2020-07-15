@@ -1,10 +1,6 @@
 package org.coroutines
 
 
-
-
-
-
 /* Coroutine._1 specializations */
 
 trait _1$spec$S[@specialized(Short, Char, Int, Float, Long, Double) S, R]
