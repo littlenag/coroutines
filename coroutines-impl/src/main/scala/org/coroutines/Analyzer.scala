@@ -320,7 +320,7 @@ trait Analyzer[C <: Context] {
   }
 
   def isCoroutineDef(tpe: Type) = {
-    val codefsym = typeOf[Coroutine[_, _]].typeConstructor.typeSymbol
+    val codefsym = typeOf[Coroutine[_, _, _]].typeConstructor.typeSymbol
     tpe.baseType(codefsym) != NoType
   }
 
@@ -382,7 +382,7 @@ trait Analyzer[C <: Context] {
   }
 
   def coroutineTypeFor(tpe: Type) = {
-    val codeftpe = typeOf[Coroutine[_, _]].typeConstructor
+    val codeftpe = typeOf[Coroutine[_, _, _]].typeConstructor
     appliedType(codeftpe, List(tpe))
   }
 

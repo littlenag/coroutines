@@ -74,7 +74,7 @@ class CoroutineTest extends funsuite.AnyFunSuite {
       yieldval(List(x))
       yieldval(List(x.toString))
     }
-    val anotherLists: Coroutine[List[Any], Unit] = lists
+    val anotherLists: Coroutine._1[Int, List[Any], Unit] = lists
     val c = call(lists(5))
     assert(c.resume)
     assert(c.value == List(5))

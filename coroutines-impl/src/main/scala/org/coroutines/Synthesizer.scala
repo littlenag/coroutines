@@ -298,7 +298,7 @@ with AstCanonicalization[C] {
     } else sys.error("Unreachable case.")
   }
 
-  def synthesize(rawlambda: Tree): Tree = {
+  def synthesize[R: WeakTypeTag](rawlambda: Tree): Tree = {
     //FIXME 2.13 fails with null type, typecheck maybe?
     //c.typecheck(rawlambda)
 
@@ -389,14 +389,14 @@ with AstCanonicalization[C] {
         if (!isCoroutineFactoryDefMarker(r.tpe))
           c.abort(r.pos,
             s"Receiver must be a coroutine.\n" +
-            s"required: Coroutine[_, ${implicitly[WeakTypeTag[R]]}]\n" +
+            s"required: Coroutine[_, _, ${implicitly[WeakTypeTag[R]]}]\n" +
             s"found:    ${r.tpe} (with underlying type ${r.tpe.widen})")
         (r, args)
       case q"$r.apply[..$_](..$args)(..$_)" =>
         if (!isCoroutineDefSugar(r.tpe))
           c.abort(r.pos,
             s"Receiver must be a coroutine.\n" +
-            s"required: Coroutine[_, ${implicitly[WeakTypeTag[R]]}]\n" +
+            s"required: Coroutine[_, _, ${implicitly[WeakTypeTag[R]]}]\n" +
             s"found:    ${r.tpe} (with underlying type ${r.tpe.widen})")
         (r, args)
       case _ =>

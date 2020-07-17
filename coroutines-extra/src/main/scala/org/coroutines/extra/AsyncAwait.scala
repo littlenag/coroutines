@@ -1,15 +1,12 @@
 package org.coroutines.extra
 
-
-
 import org.coroutines._
-import scala.annotation.unchecked.uncheckedVariance
+//import scala.annotation.unchecked.uncheckedVariance
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.util.{ Success, Failure }
-
 
 
 object AsyncAwait {
