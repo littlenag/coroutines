@@ -1,7 +1,7 @@
 package org.coroutines.common
 
 import scala.collection._
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.blackbox.Context
 
 private[coroutines] class ByTreeUntyper[C <: Context](val c: C)(val treeValue: Any) {
   import c.universe._

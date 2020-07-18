@@ -18,6 +18,39 @@ class FriendlyTypeTest extends funsuite.AnyFunSuite {
   // takes Unit, returns Unit, yields R -> Enumerator
   // take Unit, return R, yields R
 
+  test("use raw type for coroutine artity 0") {
+    val rube: Coroutine._0[Int, Unit] = cr.yielding[Int].of { () =>
+      val v = 0xDEADBEEF
+      yieldval(v)
+    }
+
+    val a = rube.inst()
+
+    assert(a.resume)
+    assert(a.value === 0xDEADBEEF)
+    assert(!a.expectsResumeValue)
+    assert(!a.resume)
+    assert(a.result === ())
+    assert(a.isCompleted)
+  }
+
+  test("use raw type for coroutine artity 3") {
+    val rube: Coroutine._3[Int, Int, Int, Int, Int] = cr.yielding[Int].of { (x: Int, y: Int, z:Int) =>
+      val v = 0xDEADBEEF
+      yieldval(v)
+      x * y * z
+    }
+
+    val a = rube.inst(2,2,2)
+
+    assert(a.resume)
+    assert(a.value === 0xDEADBEEF)
+    assert(!a.expectsResumeValue)
+    assert(!a.resume)
+    assert(a.result === 8)
+    assert(a.isCompleted)
+  }
+
   test("use friendly type for coroutine artity 0") {
     val rube: Unit -> (Int @@ Unit) = cr.yielding[Int].of { () =>
       val v = 0xDEADBEEF

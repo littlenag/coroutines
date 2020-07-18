@@ -2,7 +2,6 @@ package org.coroutines
 
 import org.coroutines.common._
 import scala.annotation.tailrec
-import scala.reflect.macros.whitebox.Context
 import scala.util.{Try, Success, Failure}
 
 /**
@@ -69,7 +68,6 @@ trait Coroutine[A, @specialized Y, R] extends Coroutine.FactoryDefMarker[(Y, R)]
   def $ep28(c: Coroutine.Instance[Y, R]): Unit = {}
   def $ep29(c: Coroutine.Instance[Y, R]): Unit = {}
 }
-
 
 object Coroutine {
   private[coroutines] val INITIAL_COSTACK_SIZE = 4
@@ -364,14 +362,6 @@ object Coroutine {
   }
 
   trait FactoryDefMarker[YR]
-
-  def synthesize[R: c.WeakTypeTag](c: Context)(f: c.Tree): c.Tree = {
-    new Synthesizer[c.type](c).synthesize(f)
-  }
-
-  def call[T: c.WeakTypeTag](c: Context)(f: c.Tree): c.Tree = {
-    new Synthesizer[c.type](c).call(f)
-  }
 
   // Requires 0 arguments to create a coroutine instance
   abstract class _0[@specialized Y, R] extends Coroutine[Unit, Y, R] {

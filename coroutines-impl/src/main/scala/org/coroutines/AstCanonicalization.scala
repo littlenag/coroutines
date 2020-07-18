@@ -3,7 +3,7 @@ package org.coroutines
 import org.coroutines.common._
 //import scala.collection._
 //import scala.language.experimental.macros
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.blackbox.Context
 
 /** Transforms the coroutine body into three address form with restricted control flow
  *  that contains only try-catch statements, while loops, if-statements, value and

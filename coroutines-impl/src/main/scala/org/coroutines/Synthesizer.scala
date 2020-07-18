@@ -1,7 +1,7 @@
 package org.coroutines
 
 import scala.collection._
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.blackbox.Context
 
 /** Synthesizes all coroutine-related functionality.
  */

@@ -5,7 +5,7 @@ package org.coroutines.extra
 import org.coroutines._
 import scala.collection._
 import scala.language.experimental.macros
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.blackbox.Context
 
 
 

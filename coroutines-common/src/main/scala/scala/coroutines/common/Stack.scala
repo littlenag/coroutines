@@ -3,7 +3,7 @@ package org.coroutines.common
 
 
 import scala.language.experimental.macros
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.blackbox.Context
 
 
 

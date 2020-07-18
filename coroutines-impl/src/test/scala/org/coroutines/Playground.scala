@@ -25,7 +25,7 @@ class Playground extends funsuite.AnyFunSuite {
 
   test("desugar coroutine call") {
     desugar {
-      val rube: Int -> (Int @@ Int) = coroutine { (x: Int) =>
+      val rube: Int -> (Int @@ Int) = cr.yielding[Int].of { (x: Int) =>
         val v = 0xDEADBEEF
         yieldval(v)
         x

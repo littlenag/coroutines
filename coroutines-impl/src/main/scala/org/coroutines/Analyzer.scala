@@ -3,7 +3,7 @@ package org.coroutines
 import org.coroutines.common._
 import scala.collection._
 //import scala.language.experimental.macros
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.blackbox.Context
 
 /** Declares basic data types and analysis utilities.
  */

@@ -3,7 +3,7 @@ package org.coroutines
 import org.coroutines.common._
 import org.coroutines.common.Cache._
 import scala.collection._
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.blackbox.Context
 
 /** Generates control flow graphs, and converts CFG nodes to ASTs.
  */
