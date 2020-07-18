@@ -17,7 +17,27 @@ types of coroutines
 * actor
 * reactor
 * transducer
-* generator
+* generator 
+  - () -> (Y, _)  yield values, ignore return type, 
+  - like iterator
+  - implemented as enumerator right now
+* worker 
+  - () -> (Nothing, R)  yield no values, return type,
+  - similar to kotlin coroutine
+  - build in launch method? take scope?
+  
+  
+* stream algebra
+ - next
+ - yield
+ - buffer
+ - delay
+ - hasPending, getPending
+ - halt
+ - fail
+ - setState, getState
+  
+see scala-async-flow by phaller 
 
 use Suspend[T] as type?
 

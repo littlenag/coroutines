@@ -7,17 +7,17 @@ import scala.util.Failure
 
 class YieldToTest extends funsuite.AnyFunSuite {
   test("after resuming to another coroutine, there should be no value") {
-    val another = coroutine { () =>
+    val another = cr.yielding[String].of { () =>
       yieldval("Yohaha")
     }
-    val anotherInstance = call(another())
+    val anotherInstance = another.inst()
 
-    val rube = coroutine { () =>
+    val rube = cr.yielding[String].of { () =>
       yieldval("started")
       yieldto(anotherInstance)
     }
 
-    val c = call(rube())
+    val c = rube.inst()
     assert(c.resume)
     assert(c.hasValue)
     assert(c.value == "started")
