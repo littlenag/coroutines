@@ -26,6 +26,19 @@ types of coroutines
   - similar to kotlin coroutine
   - build in launch method? take scope?
   
+A purely suspendable functions model doesn't have to worry about inferring a yield
+type! Yielding can be done through a channel passed to the coroutine.
+
+also means that yielding can be kept to things like generation sequences, iterators, like kotlin does
+
+would want to be able to suspend with a hint
+ - which channel or stream blocked on
+ - if called sub-coroutine
+ - if delayed
+ - allow for open hints system?
+ 
+streams - event source
+channel - event sink
   
 * stream algebra
  - next

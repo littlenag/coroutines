@@ -36,7 +36,7 @@ class RedBlackIteratorBench extends JBench.OfflineReport {
     var longest = ""
     val treeIterator = Backdoor.redBlackEnumerator
     val tree = Backdoor.redBlack(set)
-    val c = call(treeIterator(tree))
+    val c = treeIterator.inst(tree)
     while (c.pull) {
       val s = c.value
       if (longest.length < s.length) longest = s

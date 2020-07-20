@@ -1,18 +1,14 @@
 package org.coroutines
 
-
-
 import org.scalatest._
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Failure
 
-
-
 class TryCatchTest extends funsuite.AnyFunSuite {
   test("try-catch block") {
-    val rube = coroutine { () =>
+    val rube = coroutine[Nothing].of { () =>
       try {
         throw new Exception
       } catch {
@@ -20,7 +16,7 @@ class TryCatchTest extends funsuite.AnyFunSuite {
       }
     }
 
-    val c0 = call(rube())
+    val c0 = rube.inst()
     assert(!c0.resume)
     assert(c0.isCompleted)
     c0.result
@@ -28,7 +24,7 @@ class TryCatchTest extends funsuite.AnyFunSuite {
   }
 
   test("try-catch-finally block") {
-    val rube = coroutine { () =>
+    val rube = coroutine[Nothing].of { () =>
       try {
         throw new Error
       } catch {
@@ -38,7 +34,7 @@ class TryCatchTest extends funsuite.AnyFunSuite {
       }
     }
 
-    val c0 = call(rube())
+    val c0 = rube.inst()
     assert(!c0.resume)
     assert(c0.isCompleted)
     c0.tryResult match {
@@ -51,7 +47,7 @@ class TryCatchTest extends funsuite.AnyFunSuite {
     var completed = false
     var runtime = false
     var error = false
-    val rube = coroutine { (t: Throwable) =>
+    val rube = coroutine[Nothing].of { (t: Throwable) =>
       try {
         throw t
       } catch {
@@ -64,7 +60,7 @@ class TryCatchTest extends funsuite.AnyFunSuite {
       }
     }
 
-    val c0 = call(rube(new Error))
+    val c0 = rube.inst(new Error)
     assert(!runtime)
     assert(!error)
     assert(!completed)
@@ -78,14 +74,14 @@ class TryCatchTest extends funsuite.AnyFunSuite {
   }
 
   test("coroutine with a throw statement") {
-    val rube = coroutine { () =>
+    val rube = coroutine[Nothing].of { () =>
       throw {
         val str = "boom"
         new Exception(str)
       }
     }
 
-    val c = call(rube())
+    val c = rube.inst()
     assert(!c.resume)
     c.tryResult match {
       case Failure(e: Exception) => assert(e.getMessage == "boom")
@@ -94,12 +90,12 @@ class TryCatchTest extends funsuite.AnyFunSuite {
   }
 
   test("invoke another coroutine that throws") {
-    val boom = coroutine { () => throw new Exception("kaboom") }
-    val rube = coroutine { () =>
+    val boom = coroutine[Nothing].of { () => throw new Exception("kaboom") }
+    val rube = coroutine[Nothing].of { () =>
       boom()
     }
 
-    val c = call(rube())
+    val c = rube.inst()
     assert(!c.resume)
     c.tryResult match {
       case Failure(e: Exception) => assert(e.getMessage == "kaboom")
@@ -108,7 +104,7 @@ class TryCatchTest extends funsuite.AnyFunSuite {
   }
 
   test("yield inside throw") {
-    val rube = coroutine { () =>
+    val rube = coroutine[String].of { () =>
       try {
         yieldval("inside")
       } catch {
@@ -118,7 +114,7 @@ class TryCatchTest extends funsuite.AnyFunSuite {
       "done"
     }
 
-    val c = call(rube())
+    val c = rube.inst()
     assert(c.resume)
     assert(c.value == "inside")
     assert(!c.resume)
@@ -127,12 +123,12 @@ class TryCatchTest extends funsuite.AnyFunSuite {
   }
 
   test("throw and then yield") {
-    val rube = coroutine { () =>
+    val rube = coroutine[String].of { () =>
       throw new Exception("au revoir")
       yieldval("bonjour")
     }
 
-    val c = call(rube())
+    val c = rube.inst()
     assert(!c.resume)
     assert(c.hasException)
     assert(c.getValue == None)
@@ -143,7 +139,7 @@ class TryCatchTest extends funsuite.AnyFunSuite {
   }
 
   test("try/catch with different return types") {
-    val c = coroutine { () =>
+    val c = coroutine[Nothing].of { () =>
       try {
         ()
       } catch {
@@ -151,13 +147,13 @@ class TryCatchTest extends funsuite.AnyFunSuite {
       }
       Future("oh")
     }
-    val instance = call(c())
+    val instance = c.inst()
     assert(!instance.resume)
     assert(Await.result(instance.result, 1.seconds) == "oh")
   }
 
   test("try/catch with same return type") {
-    val c = coroutine { () =>
+    val c = coroutine[Nothing].of { () =>
       try {
         "ho_1"
       } catch {
@@ -165,7 +161,7 @@ class TryCatchTest extends funsuite.AnyFunSuite {
       }
       "ho_3"
     }
-    val instance = call(c())
+    val instance = c.inst()
     assert(!instance.resume)
     assert(instance.result == "ho_3")
   }

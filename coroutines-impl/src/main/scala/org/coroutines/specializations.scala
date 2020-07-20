@@ -19,19 +19,19 @@ extends Coroutine._1[Char, S, R] {
 }
 
 
-trait _1$spec$I[@specialized(Short, Char, Int, Float, Long, Double) S, R]
-extends Coroutine._1[Int, S, R] {
+trait _1$spec$I[@specialized(Short, Char, Int, Float, Long, Double) Y, R]
+extends Coroutine._1[Int, Y, R] {
   //def apply(a0: Int): R
-  def $call(a0: Int): Coroutine.Instance[S, R]
-  def $push(c: Coroutine.Instance[S, R], a0: Int): Unit
+  def $call(a0: Int): Coroutine.Instance[Y, R]
+  def $push(c: Coroutine.Instance[Y, R], a0: Int): Unit
 }
 
 
-trait _1$spec$F[@specialized(Short, Char, Int, Float, Long, Double) S, R]
-extends Coroutine._1[Float, S, R] {
+trait _1$spec$F[@specialized(Short, Char, Int, Float, Long, Double) Y, R]
+extends Coroutine._1[Float, Y, R] {
   //def apply(a0: Float): R
-  def $call(a0: Float): Coroutine.Instance[S, R]
-  def $push(c: Coroutine.Instance[S, R], a0: Float): Unit
+  def $call(a0: Float): Coroutine.Instance[Y, R]
+  def $push(c: Coroutine.Instance[Y, R], a0: Float): Unit
 }
 
 

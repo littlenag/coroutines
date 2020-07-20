@@ -16,15 +16,15 @@ object AsyncAwait {
    *  Note that `Cell` is used in order to give users the option to not directly
    *  return the result of the future.
    */
-  def await[R]: Future[R] ~~> ((Future[R], Cell[R]), R) =
-    coroutine { (f: Future[R]) =>
+  def await[R] =
+    coroutine[(Future[R], Cell[R])].of { (f: Future[R]) =>
       val cell = new Cell[R]
       yieldval((f, cell))
       cell.x
     }
 
-  def async[Y, R](body: ~~~>[(Future[Y], Cell[Y]), R]): Future[R] = {
-    val c = call(body())
+  def async[Y, R](body: Coroutine._0[(Future[Y], Cell[Y]), R]): Future[R] = {
+    val c = body.inst()
     val p = Promise[R]
     def loop() {
       if (!c.resume) p.success(c.result)
@@ -46,7 +46,7 @@ object AsyncAwait {
     /** Calls to yieldval inside an inner coroutine are yield points inside the
      *  outer coroutine.
      */
-    val h = async(coroutine { () =>
+    val h = async(coroutine[(Future[AnyVal], Cell[AnyVal])].of { () =>
       val x = await { f }
       val y = await { g }
       x + y

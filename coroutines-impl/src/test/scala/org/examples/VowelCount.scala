@@ -7,7 +7,7 @@ import org.coroutines._
 
 
 object VowelCounts {
-  val vowelcounts = coroutine { (s: String) =>
+  val vowelcounts = coroutine[Int].of { (s: String) =>
     yieldval(s.count(_ == 'a'))
     yieldval(s.count(_ == 'e'))
     yieldval(s.count(_ == 'i'))
@@ -16,7 +16,7 @@ object VowelCounts {
   }
 
   def main(args: Array[String]) {
-    val c = call(vowelcounts("this the season to be jolie"))
+    val c = vowelcounts.inst("this the season to be jolie")
     c.resume
     assert(c.value == 1)
     c.resume

@@ -14,7 +14,7 @@ object AsyncAwaitTest {
   object ToughTypeObject {
     class Inner
 
-    def m2 = async(coroutine { () =>
+    def m2 = async(coroutine[(Future[AnyRef], Cell[AnyRef])].of { () =>
       val y = await { Future[List[_]] { Nil } }
       val z = await { Future[Inner] { new Inner } }
       (y, z)
@@ -22,16 +22,16 @@ object AsyncAwaitTest {
   }
 
   // Doubly defined for ToughTypeObject
-  def await[R]: Future[R] ~~> ((Future[R], Cell[R]), R) =
-    coroutine { (f: Future[R]) =>
+  def await[R] =
+    coroutine[(Future[R], Cell[R])].of { (f: Future[R]) =>
       val cell = new Cell[R]
       yieldval((f, cell))
       cell.x
     }
 
   // Doubly defined for ToughTypeObject
-  def async[Y, R](body: ~~~>[(Future[Y], Cell[Y]), R]): Future[R] = {
-    val c = call(body())
+  def async[Y, R](body: Coroutine._0[(Future[Y], Cell[Y]), R]): Future[R] = {
+    val c = body.inst()
     val p = Promise[R]
     def loop() {
       if (!c.resume) p.success(c.result)
@@ -66,15 +66,17 @@ object PrivateWrapper {
 
 
 class AsyncAwaitTest extends funsuite.AnyFunSuite {
-  def await[R]: Future[R] ~~> ((Future[R], AsyncAwaitTest.Cell[R]), R) =
-    coroutine { (f: Future[R]) =>
-      val cell = new AsyncAwaitTest.Cell[R]
+  import AsyncAwaitTest.Cell
+
+  def await[R] =
+    coroutine[(Future[R], Cell[R])].of { (f: Future[R]) =>
+      val cell = new Cell[R]
       yieldval((f, cell))
       cell.x
     }
 
-  def async[Y, R](body: ~~~>[(Future[Y], AsyncAwaitTest.Cell[Y]), R]): Future[R] = {
-    val c = call(body())
+  def async[Y, R](body: Coroutine._0[(Future[Y], Cell[Y]), R]): Future[R] = {
+    val c = body.inst()
     val p = Promise[R]
     def loop() {
       if (!c.resume) p.success(c.result)
@@ -100,7 +102,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
 
   // Source: https://git.io/vr7H9
   test("pattern matching function") {
-    val c = async(coroutine { () =>
+    val c = async(coroutine[(Future[Int], Cell[Int])].of { () =>
       await(Future(1))
       val a = await(Future(1))
       val f = { case x => x + a }: Function[Int, Int]
@@ -112,7 +114,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
 
   // Source: https://git.io/vr7HA
   test("existential bind 1") {
-    def m(a: Any) = async(coroutine { () =>
+    def m(a: Any) = async(coroutine[(Future[Int], Cell[Int])].of { () =>
       a match {
         case s: Seq[_] =>
           val x = s.size
@@ -129,12 +131,12 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
   test("existential bind 2") {
     def conjure[T]: T = null.asInstanceOf[T]
 
-    def m1 = AsyncAwaitTest.async(coroutine { () =>
+    def m1 = AsyncAwaitTest.async(coroutine[(Future[Int], Cell[Int])].of { () =>
       val p: List[Option[_]] = conjure[List[Option[_]]]
       AsyncAwaitTest.await(Future(1))
     })
 
-    def m2 = AsyncAwaitTest.async(coroutine { () =>
+    def m2 = AsyncAwaitTest.async(coroutine[(Future[List[_]], Cell[List[_]])].of { () =>
       AsyncAwaitTest.await(Future[List[_]](Nil))
     })
   }
@@ -144,7 +146,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
 
   // Source: https://git.io/vr7Fx
   test("existential if/else") {
-    def foo: Future[Container[_]] = AsyncAwaitTest.async(coroutine { () =>
+    def foo: Future[Container[_]] = AsyncAwaitTest.async(coroutine[(Future[Int], Cell[Int])].of { () =>
       val a: Any = List(1)
       if (true) {
         val buf: Seq[_] = List(1)
@@ -171,7 +173,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
       implicit def `Something to do with List`[W, S, R]
         (implicit funDep: FunDep[W, S, R]) =
         new FunDep[W, List[S], W] {
-          def method(w: W, l: List[S]) = AsyncAwaitTest.async(coroutine { () =>
+          def method(w: W, l: List[S]) = AsyncAwaitTest.async(coroutine[(Future[Future[R]], Cell[Future[R]])].of { () =>
             val it = l.iterator
             while (it.hasNext) {
               AsyncAwaitTest.await(Future(funDep.method(w, it.next()))
@@ -187,7 +189,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
   test("ticket 66 in scala/async") {
     val e = new Exception()
     val f: Future[Nothing] = Future.failed(e)
-    val f1 = AsyncAwaitTest.async(coroutine { () =>
+    val f1 = AsyncAwaitTest.async(coroutine[(Future[Future[Nothing]], Cell[Future[Nothing]])].of { () =>
       AsyncAwaitTest.await(Future(f))
     })
     try {
@@ -199,7 +201,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
 
   // Source: https://git.io/vr7Nf
   test("ticket 83 in scala/async-- using value class") {
-    val f = AsyncAwaitTest.async(coroutine { () =>
+    val f = AsyncAwaitTest.async(coroutine[(Future[Future[IntWrapper]], Cell[Future[IntWrapper]])].of { () =>
       val uid = new IntWrapper("foo")
       AsyncAwaitTest.await(Future(Future(uid)))
     })
@@ -212,7 +214,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
   // test("ticket 86 in scala/async-- using matched value class") {
   //   def doAThing(param: IntWrapper) = Future(None)
 
-  //   val fut = AsyncAwaitTest.async(coroutine { () =>
+  //   val fut = AsyncAwaitTest.async(coroutine[Int].of { () =>
   //     Option(new IntWrapper("value!")) match {
   //       case Some(valueHolder) =>
   //         AsyncAwaitTest.await(Future(doAThing(valueHolder)))
@@ -232,7 +234,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
   // test("ticket 86 in scala/async-- using matched parameterized value class") {
   //   def doAThing(param: ParamWrapper[String]) = Future(None)
 
-  //   val fut = AsyncAwaitTest.async(coroutine { () =>
+  //   val fut = AsyncAwaitTest.async(coroutine[Int].of { () =>
   //     Option(new ParamWrapper("value!")) match {
   //       case Some(valueHolder) =>
   //         AsyncAwaitTest.await(Future(doAThing(valueHolder)))
@@ -250,7 +252,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
   // test("ticket 86 in scala/async-- using private value class") {
   //   def doAThing(param: PrivateWrapper) = Future(None)
 
-  //   val fut = AsyncAwaitTest.async(coroutine { () => 
+  //   val fut = AsyncAwaitTest.async(coroutine[Int].of { () =>
   //     Option(PrivateWrapper.Instance) match {
   //       case Some(valueHolder) =>
   //         AsyncAwaitTest.await(doAThing(valueHolder))
@@ -268,7 +270,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
     def combine[A](a1: A, a2: A): A = a1
 
     def combineAsync[A](a1: Future[A], a2: Future[A]) =
-      async(coroutine { () =>
+      async(coroutine[(Future[Future[A]], Cell[Future[A]])].of { () =>
         combine(await(Future(a1)), await(Future(a2)))
       })
 
@@ -281,7 +283,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
 
   // Source: https://git.io/vrFp5
   test("match as expression 1") {
-    val c = AsyncAwaitTest.async(coroutine { () =>
+    val c = AsyncAwaitTest.async(coroutine[(Future[Int], Cell[Int])].of { () =>
       val x = "" match {
         case _ => AsyncAwaitTest.await(Future(1)) + 1
       }
@@ -293,7 +295,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
 
   // Source: https://git.io/vrFhh
   test("match as expression 2") {
-    val c = AsyncAwaitTest.async(coroutine { () =>
+    val c = AsyncAwaitTest.async(coroutine[(Future[Int], Cell[Int])].of { () =>
       val x = "" match {
         case "" if false => await(Future(1)) + 1
         case _           => 2 + await(Future(1))
@@ -315,12 +317,12 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
       i
     }
     def foo(a: Int = next(), b: Int = next()) = (a, b)
-    val c1 = async(coroutine { () =>
+    val c1 = async(coroutine[(Future[Int], Cell[Int])].of { () =>
       foo(b = await(Future(next())))
     })
     assert(Await.result(c1, 5.seconds) == (2, 1))
     i = 0
-    val c2 = async(coroutine { () =>
+    val c2 = async(coroutine[(Future[Int], Cell[Int])].of { () =>
       foo(a = await(Future(next())))
     })
     assert(Await.result(c2, 5.seconds) == (1, 2))
@@ -331,7 +333,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
     var i = 0
     def foo(a: Int, b: Int*) = b.toList
     def id(i: Int) = i
-    val c = async(coroutine { () =>
+    val c = async(coroutine[(Future[Int], Cell[Int])].of { () =>
       foo(await(Future(0)), id(1), id(2), id(3), await(Future(4)))
     })
     assert(Await.result(c, 5.seconds) == List(1, 2, 3, 4))
@@ -342,7 +344,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
     var i = 0
     def foo(a: Int, b: Int*) = b.toList
     def id(i: Int) = i
-    val c = async(coroutine { () =>
+    val c = async(coroutine[(Future[Int], Cell[Int])].of { () =>
       foo(await(Future(0)), List(id(1), id(2), id(3)): _*)
     })
     assert(Await.result(c, 5.seconds) == List(1, 2, 3))
@@ -350,7 +352,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
 
   // Source: https://git.io/vrhT0
   test("await in typed") {
-    val c = async(coroutine { () =>
+    val c = async(coroutine[(Future[Int], Cell[Int])].of { () =>
       (("msg: " + await(Future(0))): String).toString
     })
     assert(Await.result(c, 5.seconds) == "msg: 0")
@@ -358,7 +360,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
 
   // Source: https://git.io/vrhTz
   test("await in assign") {
-    val c = async(coroutine { () =>
+    val c = async(coroutine[(Future[Int], Cell[Int])].of { () =>
       var x = 0
       x = await(Future(1))
       x
@@ -370,7 +372,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
   test("case body must be typed as unit") {
     val Up = 1
     val Down = 2
-    val sign = async(coroutine { () =>
+    val sign = async(coroutine[(Future[Int], Cell[Int])].of { () =>
       await(Future(1)) match {
         case Up   => 1.0
         case Down => -1.0
@@ -380,7 +382,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite {
   }
 
   test("compilation error in partial function") {
-    val c = coroutine { () =>
+    val c = coroutine[(Future[String], Cell[String])].of { () =>
       try {
         sys.error("error")
         await(Future("ho"))

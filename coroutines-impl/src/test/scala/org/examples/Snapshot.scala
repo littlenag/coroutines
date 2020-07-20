@@ -7,14 +7,14 @@ import org.coroutines._
 
 
 object Snapshot {
-  val values = coroutine { () =>
+  val values = coroutine[Int].of { () =>
     yieldval(1)
     yieldval(2)
     yieldval(3)
   }
 
   def main(args: Array[String]) {
-    val c = call(values())
+    val c = values.inst()
     assert(c.resume)
     assert(c.value == 1)
     val c2 = c.snapshot

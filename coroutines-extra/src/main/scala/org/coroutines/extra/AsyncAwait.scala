@@ -1,12 +1,12 @@
 package org.coroutines.extra
 
 import org.coroutines._
-//import scala.annotation.unchecked.uncheckedVariance
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
-import scala.util.{ Success, Failure }
+import scala.util.{Failure, Success}
 
 
 object AsyncAwait {
@@ -21,7 +21,7 @@ object AsyncAwait {
    *          result of the future.
    */
   def await[R]: Future[R] ~~> (Future[R], R) =
-    coroutine { (awaitedFuture: Future[R]) =>
+    coroutine[Future[R]].of { (awaitedFuture: Future[R]) =>
       yieldval(awaitedFuture)
       var result: R = null.asInstanceOf[R]
       awaitedFuture.value match {
@@ -40,7 +40,7 @@ object AsyncAwait {
    *               future.
    */
   def asyncCall[Y, R](body: ~~~>[Future[Y], R]): Future[R] = {
-    val c = call(body())
+    val c = body.inst()
     val p = Promise[R]
     def loop() {
       if (!c.resume) {
@@ -78,7 +78,7 @@ object AsyncAwait {
    *  @return      A tree that contains an invocation of `asyncCall` on a coroutine
    *               with `body` as its body.
    */
-  def asyncMacro[Y, R](c: Context)(body: c.Tree): c.Tree = {
+  def asyncMacro[Y: c.WeakTypeTag, R](c: Context)(body: c.Tree): c.Tree = {
     import c.universe._
 
     /** Ensures that no values are yielded inside the async block.
@@ -122,7 +122,7 @@ object AsyncAwait {
     new NoYieldsValidator().traverse(body)
 
     q"""
-       val c = coroutine { () =>
+       val c = coroutine[_ <: AnyRef].of { () =>
          $body
        }
        _root_.org.coroutines.extra.AsyncAwait.asyncCall(c)

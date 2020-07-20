@@ -40,12 +40,15 @@ abstract class ->[A, YR <: @@[_, _]](val _yr_discard: YR) {
   def inst(a:A): Coroutine.Instance[Y, R] =
     adapter.$call(a)
 
+  //def inst[Y](a:A)(implicit yr: @@[Y, R] =:= YR): Coroutine.Instance[Y, R] = adapter.$call(a)
+
+
   // Need to instantiate inside coroutine?
   //private def $call(a:A): Coroutine.Instance[Y, R] = adapter.$call(a)
   //def $push(co: Coroutine.Instance[Y, R])(a:A): Unit = adapter.$push(co)(a)
 }
 
-class @@[Y, R] private[coroutines](val blueprint: Coroutine[_, Y, R]) {
+class @@[Y, R] private[coroutines](val blueprint: Coroutine[Y, R]) {
   type YY = Y
   type RR = R
 }
@@ -65,7 +68,7 @@ class @@[Y, R] private[coroutines](val blueprint: Coroutine[_, Y, R]) {
  */
 class ~~>[T, YR] private[coroutines](val blueprint: Coroutine._1[T, _, _]) extends Coroutine.FactoryDefMarker[YR] {
 
-  def apply[@specialized Y, R](t: T)(implicit e: (Y, R) =:= YR): R = {
+  def apply[Y, R](t: T)(implicit e: (Y, R) =:= YR): R = {
     sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)
   }
 
@@ -93,7 +96,7 @@ class ~~>[T, YR] private[coroutines](val blueprint: Coroutine._1[T, _, _]) exten
  */
 class ~>[PS, YR] private[coroutines] (val blueprint: Coroutine.FactoryDefMarker[YR]) extends Coroutine.FactoryDefMarker[YR] {
 
-  def apply[T1, T2, @specialized S, R](t1: T1, t2: T2)(
+  def apply[T1, T2, S, R](t1: T1, t2: T2)(
     implicit ps: PS =:= Tuple2[T1, T2], yr: (S, R) =:= YR
   ): R = {
     sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)
@@ -108,30 +111,30 @@ class ~>[PS, YR] private[coroutines] (val blueprint: Coroutine.FactoryDefMarker[
   ): Coroutine.Instance[S, R] = {
     blueprint.asInstanceOf[Coroutine._2[T1, T2, S, R]].$call(t1, t2)
   }
-  def $push[T1, T2, @specialized S, R](co: Coroutine.Instance[S, R], t1: T1, t2: T2)(
-    implicit ps: PS =:= Tuple2[T1, T2], yr: (S, R) =:= YR
+  def $push[T1, T2, @specialized Y, R](co: Coroutine.Instance[Y, R], t1: T1, t2: T2)(
+    implicit ps: PS =:= Tuple2[T1, T2], yr: (Y, R) =:= YR
   ): Unit = {
-    blueprint.asInstanceOf[Coroutine._2[T1, T2, S, R]].$push(co, t1, t2)
+    blueprint.asInstanceOf[Coroutine._2[T1, T2, Y, R]].$push(co, t1, t2)
   }
 
-  def apply[T1, T2, T3, @specialized S, R](t1: T1, t2: T2, t3: T3)(
-    implicit ps: PS =:= Tuple3[T1, T2, T3], yr: (S, R) =:= YR
+  def apply[T1, T2, T3, Y, R](t1: T1, t2: T2, t3: T3)(
+    implicit ps: PS =:= Tuple3[T1, T2, T3], yr: (Y, R) =:= YR
   ): R = {
     sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)
   }
-  def inst[T1, T2, T3, @specialized S, R](t1: T1, t2: T2, t3: T3)(
-    implicit ps: PS =:= Tuple3[T1, T2, T3], yr: (S, R) =:= YR
-  ): Coroutine.Instance[S, R] = {
-    blueprint.asInstanceOf[Coroutine._3[T1, T2, T3, S, R]].$call(t1, t2, t3)
+  def inst[T1, T2, T3, @specialized Y, R](t1: T1, t2: T2, t3: T3)(
+    implicit ps: PS =:= Tuple3[T1, T2, T3], yr: (Y, R) =:= YR
+  ): Coroutine.Instance[Y, R] = {
+    blueprint.asInstanceOf[Coroutine._3[T1, T2, T3, Y, R]].$call(t1, t2, t3)
   }
-  def $call[T1, T2, T3, @specialized S, R](t1: T1, t2: T2, t3: T3)(
-    implicit ps: PS =:= Tuple3[T1, T2, T3], yr: (S, R) =:= YR
-  ): Coroutine.Instance[S, R] = {
-    blueprint.asInstanceOf[Coroutine._3[T1, T2, T3, S, R]].$call(t1, t2, t3)
+  def $call[T1, T2, T3, @specialized Y, R](t1: T1, t2: T2, t3: T3)(
+    implicit ps: PS =:= Tuple3[T1, T2, T3], yr: (Y, R) =:= YR
+  ): Coroutine.Instance[Y, R] = {
+    blueprint.asInstanceOf[Coroutine._3[T1, T2, T3, Y, R]].$call(t1, t2, t3)
   }
-  def $push[T1, T2, T3, @specialized S, R](co: Coroutine.Instance[S, R], t1: T1, t2: T2, t3: T3)(
-    implicit ps: PS =:= Tuple3[T1, T2, T3], yr: (S, R) =:= YR
+  def $push[T1, T2, T3, @specialized Y, R](co: Coroutine.Instance[Y, R], t1: T1, t2: T2, t3: T3)(
+    implicit ps: PS =:= Tuple3[T1, T2, T3], yr: (Y, R) =:= YR
   ): Unit = {
-    blueprint.asInstanceOf[Coroutine._3[T1, T2, T3, S, R]].$push(co, t1, t2, t3)
+    blueprint.asInstanceOf[Coroutine._3[T1, T2, T3, Y, R]].$push(co, t1, t2, t3)
   }
 }

@@ -46,7 +46,7 @@ class StreamBench extends JBench.OfflineReport {
   @curve("coroutine")
   def coroutineFibonacciToBuffer(sz: Int) = {
     val buffer = mutable.Buffer[BigInt]()
-    val fibs = coroutine { () =>
+    val fibs = coroutine[Int].of { () =>
       var prev = BigInt(0)
       var curr = BigInt(1)
       yieldval(prev)
@@ -59,7 +59,7 @@ class StreamBench extends JBench.OfflineReport {
       }
     }
     var i = 0
-    val c = call(fibs())
+    val c = fibs.inst()
     while (i < sz) {
       c.resume
       buffer += c.value
@@ -92,7 +92,7 @@ class StreamBench extends JBench.OfflineReport {
   @curve("coroutine")
   def coroutineTaylorSum(sz: Int) = {
     var sum = 0.0
-    val taylor = coroutine { (x: Double) =>
+    val taylor = coroutine[Int].of { (x: Double) =>
       var last = 1.0
       yieldval(last)
       while (true) {
@@ -101,7 +101,7 @@ class StreamBench extends JBench.OfflineReport {
       }
     }
     var i = 0
-    val c = call(taylor(0.5))
+    val c = taylor.inst(0.5)
     while (i < sz) {
       c.resume
       sum += c.value

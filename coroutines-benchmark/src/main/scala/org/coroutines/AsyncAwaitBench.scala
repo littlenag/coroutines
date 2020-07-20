@@ -59,7 +59,7 @@ class AsyncAwaitBench extends JBench.OfflineReport {
   }
 
   def coroutineAsync[Y, T](f: Coroutine._0[Future[Y], T]): Future[T] = {
-    val c = call(f())
+    val c = f.inst()
     val p = Promise[T]()
     def loop() {
       if (!c.resume) p.success(c.result)
@@ -71,7 +71,7 @@ class AsyncAwaitBench extends JBench.OfflineReport {
     p.future
   }
 
-  def coroutineAwait[T]: Coroutine._1[Future[T], Future[T], T] = coroutine {
+  def coroutineAwait[T]: Coroutine._1[Future[T], Future[T], T] = coroutine[Int].of {
     (f: Future[T]) =>
     yieldval(f)
     f.value.get.get
@@ -82,7 +82,7 @@ class AsyncAwaitBench extends JBench.OfflineReport {
   @curve("coroutine")
   def coroutineAsyncAwait(sz: Int) = {
     val done = coroutineAsync {
-      coroutine { () =>
+      coroutine[Int].of { () =>
         var i = 0
         while (i < sz) {
           val reply = coroutineAwait(request(i))
@@ -98,7 +98,7 @@ class AsyncAwaitBench extends JBench.OfflineReport {
   @curve("coroutine")
   def delayedCoroutineAsyncAwait(sz: Int) = {
     val done = coroutineAsync {
-      coroutine { () =>
+      coroutine[Int].of { () =>
         var i = 0
         while (i < sz) {
           val reply = coroutineAwait(delayedRequest(i))

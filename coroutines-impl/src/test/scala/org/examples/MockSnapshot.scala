@@ -1,11 +1,7 @@
 package org.examples
 
-
-
 import org.coroutines._
-import scala.util._
-
-
+//import scala.util._
 
 object MockSnapshot {
   abstract class TestSuite {
@@ -13,7 +9,7 @@ object MockSnapshot {
       var value = false
     }
 
-    val mock: ~~~>[Cell, Boolean] = coroutine { () =>
+    val mock = coroutine[Cell].of { () =>
       val cell = new Cell
       yieldval(cell)
       cell.value
@@ -36,7 +32,7 @@ object MockSnapshot {
   }
 
   class MyTestSuite extends TestSuite {
-    val myAlgorithm = coroutine { (x: Int) =>
+    val myAlgorithm = coroutine[Cell].of { (x: Int) =>
       if (mock()) {
         assert(2 * x == x + x)
       } else {
@@ -44,10 +40,10 @@ object MockSnapshot {
       }
     }
 
-    assert(test(call(myAlgorithm(5))))
+    assert(test(myAlgorithm.inst(5)))
 
     // False because there is division by zero.
-    assert(!test(call(myAlgorithm(0))))
+    assert(!test(myAlgorithm.inst(0)))
   }
 
   def main(args: Array[String]) {

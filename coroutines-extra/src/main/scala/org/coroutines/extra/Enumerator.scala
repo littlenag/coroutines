@@ -1,13 +1,8 @@
 package org.coroutines.extra
 
-
-
 import org.coroutines._
-import scala.collection._
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
-
-
 
 /** Ignores and does nothing with the return value of the coroutine. This makes
  *  specialization simpler and also makes it more straightforward for the user to
@@ -45,7 +40,7 @@ class Enumerator[@specialized(Int, Long, Double) Y]
 object Enumerator {
   def apply[Y](c: Coroutine.Instance[Y, _]) = new Enumerator(c.snapshot)
 
-  def apply[Y](c: Coroutine._0[Y, _]) = new Enumerator(call(c()))
+  def apply[Y](c: Coroutine._0[Y, _]) = new Enumerator(c.inst())
 
   def apply[Y, R](body: =>R): Enumerator[Y] = macro applyMacro[Y, R]
 
@@ -53,7 +48,7 @@ object Enumerator {
     import c.universe._
 
     q"""
-       Enumerator(coroutine { () =>
+       Enumerator(coroutine[Int].of { () =>
          $body
        })
      """

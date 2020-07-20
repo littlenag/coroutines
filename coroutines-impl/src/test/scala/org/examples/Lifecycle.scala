@@ -9,7 +9,7 @@ import scala.util.Success
 
 
 object Lifecycle {
-  val katamari: Int ~~> (String, Int) = coroutine { (n: Int) =>
+  val katamari = coroutine[String].of { (n: Int) =>
     var i = 1
     yieldval("naaaa")
     while (i < n) {
@@ -21,7 +21,7 @@ object Lifecycle {
   }
 
   def main(args: Array[String]) {
-    val c = call(katamari(9))
+    val c = katamari.inst(9)
     assert(c.resume)
     assert(c.hasValue)
     assert(c.value == "naaaa")
@@ -38,7 +38,7 @@ object Lifecycle {
     assert(!c.isLive)
 
     val theme = "naaaa na na na na na na na na Katamari Damacy!"
-    assert(drain(call(katamari(9))) == theme)
+    assert(drain(katamari.inst(9)) == theme)
   }
 
   def drain(f: String <~> Int): String = {

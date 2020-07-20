@@ -389,14 +389,14 @@ with AstCanonicalization[C] {
         if (!isCoroutineFactoryDefMarker(r.tpe))
           c.abort(r.pos,
             s"Receiver must be a coroutine.\n" +
-            s"required: Coroutine[_, _, ${implicitly[WeakTypeTag[R]]}]\n" +
+            s"required: Coroutine[_, ${implicitly[WeakTypeTag[R]]}]\n" +
             s"found:    ${r.tpe} (with underlying type ${r.tpe.widen})")
         (r, args)
       case q"$r.apply[..$_](..$args)(..$_)" =>
         if (!isCoroutineDefSugar(r.tpe))
           c.abort(r.pos,
             s"Receiver must be a coroutine.\n" +
-            s"required: Coroutine[_, _, ${implicitly[WeakTypeTag[R]]}]\n" +
+            s"required: Coroutine[_, ${implicitly[WeakTypeTag[R]]}]\n" +
             s"found:    ${r.tpe} (with underlying type ${r.tpe.widen})")
         (r, args)
       case _ =>

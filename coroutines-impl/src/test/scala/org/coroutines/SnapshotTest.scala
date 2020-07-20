@@ -10,7 +10,7 @@ import scala.util.Failure
 
 class SnapshotTest extends funsuite.AnyFunSuite {
   test("coroutine instance should be cloned and resumed as needed") {
-    val countdown = coroutine { (n: Int) =>
+    val countdown = coroutine[Int].of { (n: Int) =>
       var i = n
       while (i >= 0) {
         yieldval(i)
@@ -18,7 +18,7 @@ class SnapshotTest extends funsuite.AnyFunSuite {
       }
     }
 
-    val c = call(countdown(10))
+    val c = countdown.inst(10)
     for (i <- 0 until 5) {
       assert(c.resume)
       assert(c.value == (10 - i))

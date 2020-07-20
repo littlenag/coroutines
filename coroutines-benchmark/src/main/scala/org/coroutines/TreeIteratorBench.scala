@@ -93,7 +93,7 @@ class TreeIteratorBench extends JBench.OfflineReport {
   @curve("coroutine")
   def coroutineMax(tree: Tree) {
     var max = Int.MinValue
-    treeEnumerator = coroutine { (t: Tree) =>
+    treeEnumerator = coroutine[Int].of { (t: Tree) =>
       t match {
         case n: Node =>
           if (n.left != Empty) treeEnumerator(n.left)
@@ -102,7 +102,7 @@ class TreeIteratorBench extends JBench.OfflineReport {
         case Empty =>
       }
     }
-    val c = call(treeEnumerator(tree))
+    val c = treeEnumerator.inst(tree)
     while (c.pull) {
       val x = c.value
       if (x > max) max = x
@@ -145,7 +145,7 @@ class TreeIteratorBench extends JBench.OfflineReport {
   @curve("coroutine")
   def coroutineToArray(tree: Tree) {
     val a = new IntArray
-    treeEnumerator = coroutine { (t: Tree) =>
+    treeEnumerator = coroutine[Int].of { (t: Tree) =>
       t match {
         case n: Node =>
           if (n.left != Empty) treeEnumerator(n.left)
@@ -154,7 +154,7 @@ class TreeIteratorBench extends JBench.OfflineReport {
         case Empty =>
       }
     }
-    val c = call(treeEnumerator(tree))
+    val c = treeEnumerator.inst(tree)
     while (c.pull) {
       val x = c.value
       a.add(x)
@@ -199,7 +199,7 @@ class TreeIteratorBench extends JBench.OfflineReport {
   @curve("coroutine")
   def coroutineSameFringe(p: (Tree, Tree)) {
     val (t1, t2) = p
-    treeEnumerator = coroutine { (t: Tree) =>
+    treeEnumerator = coroutine[Int].of { (t: Tree) =>
       t match {
         case n: Node =>
           if (n.left != Empty) treeEnumerator(n.left)
@@ -208,8 +208,8 @@ class TreeIteratorBench extends JBench.OfflineReport {
         case Empty =>
       }
     }
-    val c1 = call(treeEnumerator(t1))
-    val c2 = call(treeEnumerator(t2))
+    val c1 = treeEnumerator.inst(t1)
+    val c2 = treeEnumerator.inst(t2)
     var same = true
     while (c1.pull && c2.pull) {
       val x = c1.value

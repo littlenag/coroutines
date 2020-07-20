@@ -36,7 +36,7 @@ class HashSetIteratorBench extends JBench.OfflineReport {
     var longest = ""
     val hashIterator = Backdoor.hashSetEnumerator
     val table = Backdoor.hashSet(set)
-    val c = call(hashIterator(table))
+    val c = hashIterator.inst(table)
     while (c.pull) {
       val s = c.value
       if (longest.length < s.length) longest = s

@@ -5,12 +5,14 @@ import scala.annotation.tailrec
 import scala.util.{Try, Success, Failure}
 
 /**
- * The object that generates instances of callable coroutines. Factory
- * @tparam A tuple of arguments
+ * The object that generates instances of callable coroutines. Factory.
+ *
+ * @tparam A tuple of arguments, contravariant to avoid issues in the Instance class.
+ *           seems to break things, TODO fix this
  * @tparam Y type of values yielded
  * @tparam R type of value returned
  */
-trait Coroutine[A, @specialized Y, R] extends Coroutine.FactoryDefMarker[(Y, R)] {
+trait Coroutine[@specialized Y, R] extends Coroutine.FactoryDefMarker[(Y, R)] {
   def $enter(c: Coroutine.Instance[Y, R]): Unit
   def $suspend(c: Coroutine.Instance[Y, R]): Unit = {
     c.$hasYield = false
@@ -72,8 +74,6 @@ trait Coroutine[A, @specialized Y, R] extends Coroutine.FactoryDefMarker[(Y, R)]
 object Coroutine {
   private[coroutines] val INITIAL_COSTACK_SIZE = 4
 
-  type SomeA
-
   type SomeY
 
   type SomeR
@@ -82,7 +82,7 @@ object Coroutine {
   private[coroutines] final def resume[Y, R](
     callsite: Instance[Y, R], actual: Instance[_, _]
   ): Boolean = {
-    val cd = Stack.top(actual.$costack).asInstanceOf[Coroutine[SomeA, SomeY, SomeR]]
+    val cd = Stack.top(actual.$costack).asInstanceOf[Coroutine[SomeY, SomeR]]
     cd.$enter(actual.asInstanceOf[Instance[SomeY, SomeR]])
     if (actual.$target ne null) {
       val newactual = actual.$target
@@ -102,8 +102,8 @@ object Coroutine {
    */
   class Instance[@specialized Y, R] {
     var $costackptr = 0
-    var $costack: Array[Coroutine[_, Y, R]] =
-      new Array[Coroutine[_, Y, R]](INITIAL_COSTACK_SIZE)
+    var $costack: Array[Coroutine[Y, R]] =
+      new Array[Coroutine[Y, R]](INITIAL_COSTACK_SIZE)
     var $pcstackptr = 0
     var $pcstack = new Array[Short](INITIAL_COSTACK_SIZE)
     var $refstackptr = 0
@@ -364,7 +364,7 @@ object Coroutine {
   trait FactoryDefMarker[YR]
 
   // Requires 0 arguments to create a coroutine instance
-  abstract class _0[@specialized Y, R] extends Coroutine[Unit, Y, R] {
+  abstract class _0[@specialized Y, R] extends Coroutine[/*Unit,*/ Y, R] {
     def apply(): R //= sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)
     def inst(): Instance[Y, R] = $call()
     def $call(): Instance[Y, R]
@@ -373,7 +373,7 @@ object Coroutine {
   }
 
   // Requires 1 argument to create a coroutine instance
-  abstract class _1[A0, @specialized Y, R] extends Coroutine[Tuple1[A0], Y, R] {
+  abstract class _1[A0, @specialized Y, R] extends Coroutine[/*Tuple1[A0],*/ Y, R] {
     def apply(a0: A0): R //= sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)
     def inst(a0: A0): Instance[Y, R] = $call(a0)
     def $call(a0: A0): Instance[Y, R]
@@ -382,7 +382,7 @@ object Coroutine {
   }
 
   // Requires 2 arguments to create a coroutine instance
-  abstract class _2[A0, A1, @specialized Y, R] extends Coroutine[(A0, A1), Y, R] {
+  abstract class _2[A0, A1, @specialized Y, R] extends Coroutine[/*(A0, A1),*/ Y, R] {
     def apply(a0: A0, a1: A1): R //= sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)
     def inst(a0: A0, a1: A1): Instance[Y, R] = $call(a0, a1)
     def $call(a0: A0, a1: A1): Instance[Y, R]
@@ -391,7 +391,7 @@ object Coroutine {
   }
 
   // Requires 3 arguments to create a coroutine instance
-  abstract class _3[A0, A1, A2, @specialized Y, R] extends Coroutine[(A0, A1, A2), Y, R] {
+  abstract class _3[A0, A1, A2, @specialized Y, R] extends Coroutine[/*(A0, A1, A2),*/ Y, R] {
     def apply(a0: A0, a1: A1, a2: A2): R //= sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)
     def inst(a0: A0, a1: A1, a2: A2): Instance[Y, R] = $call(a0, a1, a2)
     def $call(a0: A0, a1: A1, a2: A2): Instance[Y, R]

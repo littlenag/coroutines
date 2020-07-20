@@ -113,7 +113,7 @@ class ScalaCheckBench extends JBench.OfflineReport {
   class Backtracker {
     val random = new Random(111)
 
-    val recurse: (Unit <~> Unit) ~~> (Unit, Unit) = coroutine { (c: Unit <~> Unit) =>
+    val recurse: (Unit <~> Unit) ~~> (Unit, Unit) = coroutine[Int].of { (c: Unit <~> Unit) =>
       if (c.resume) {
         val saved = c.snapshot
         recurse(c)
@@ -123,20 +123,20 @@ class ScalaCheckBench extends JBench.OfflineReport {
       }
     }
 
-    val traverse = coroutine { (snippet: ~~~>[Unit, Unit]) =>
+    val traverse = coroutine[Int].of { (snippet: ~~~>[Unit, Unit]) =>
       while (true) {
-        val c = call(snippet())
+        val c = snippet.inst()
         recurse(c)
       }
     }
 
     def backtrack(snippet: ~~~>[Unit, Unit], numTests: Int): Unit = {
       var testsLeft = numTests
-      val t = call(traverse(snippet))
+      val t = traverse.inst(snippet)
       for (i <- 0 until numTests) t.resume
     }
 
-    val int = coroutine { (from: Int, until: Int) =>
+    val int = coroutine[Int].of { (from: Int, until: Int) =>
       yieldval(())
       from + random.nextInt(until - from)
     }
@@ -147,12 +147,12 @@ class ScalaCheckBench extends JBench.OfflineReport {
   @curve("coroutine")
   def coroutineTestFraction(numTests: Int) = {
     val b = new Backtracker
-    val fract = coroutine { () =>
+    val fract = coroutine[Int].of { () =>
       val den = b.int(1, max)
       val num = b.int(0, den)
       Fract(num, den)
     }
-    val test = coroutine { () =>
+    val test = coroutine[Int].of { () =>
       val a = fract()
       val b = fract()
       val c = add(a, b)
@@ -168,11 +168,11 @@ class ScalaCheckBench extends JBench.OfflineReport {
   @curve("coroutine")
   def coroutineTestList(numTests: Int) = {
     val b = new Backtracker
-    val list = coroutine { () =>
+    val list = coroutine[Int].of { () =>
       val x = b.int(1, max)
       List.fill(max)(x)
     }
-    val test = coroutine { () =>
+    val test = coroutine[Int].of { () =>
       val a = list()
       val b = list()
       val c = a ::: b

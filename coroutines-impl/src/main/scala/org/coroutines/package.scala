@@ -38,9 +38,6 @@ package object coroutines {
     sys.error("YieldTo allowed only inside coroutines.")
   }
 
-  // Replaced with cr.inst(..args)
-  def call[R](f: R): Any = macro CoroutineMacros.call[R]
-
   //def call[Y, R](f: Coroutine._0[Y, R]): Coroutine.Instance[Y, R] = macro Coroutine.call[Coroutine._0[Y, R]]
   //def call[A0, Y, R](f: Coroutine._1[A0, Y, R]): Coroutine.Instance[Y, R] = macro Coroutine.call[Coroutine._1[A0, Y, R]]
   //def call[A0, A1, Y, R](f: Coroutine._2[A0, A1, Y, R]): Coroutine.Instance[Y, R] = macro Coroutine.call[Coroutine._2[A0, A1, Y, R]]
@@ -63,50 +60,47 @@ package object coroutines {
     //implicit object `\n The error is because the type parameter was resolved to RuntimeClass` extends NotNothing[RuntimeClass]
   }
 
-  trait Yields[Y]
+  //trait Yields[Y]
+  //implicit def yields[T: NotNothing] = new Yields[T] {}
 
-  implicit def yields[T: NotNothing] = new Yields[T] {}
-
-  object cr {
-    class OfBuilder[Y]() {
-      def of[R](f: () => R): Coroutine._0[Y, R] = macro CoroutineMacros.synthesize[R]
-      def of[T1, R](f: T1 => R): Coroutine._1[T1, Y, R] = macro CoroutineMacros.synthesize[R]
-      def of[T1, T2, R](f: (T1, T2) => R): Coroutine._2[T1, T2, Y, R] = macro CoroutineMacros.synthesize[R]
-      def of[T1, T2, T3, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, Y, R] = macro CoroutineMacros.synthesize[R]
-    }
-
-    def yielding[Y: NotNothing]: OfBuilder[Y] = new OfBuilder[Y]
-
-    // Coroutine._0[Nothing, R] => never yields, is this a case we care about? would need to statically evaluate
-
-    // Coroutines that yield unit values only, ie nothing useful
-    // Coroutine._0[Unit, R] => may yield, is this a case we care about?
-
-    // of suspendable
-    def ofS[R](f: () => R): Coroutine._0[Unit, R] = macro CoroutineMacros.synthesize[R]
-    def ofS[T1, R](f: T1 => R): Coroutine._1[T1, Unit, R] = macro CoroutineMacros.synthesize[R]
-    def ofS[T1, T2, R](f: (T1, T2) => R): Coroutine._2[T1, T2, Unit, R] = macro CoroutineMacros.synthesize[R]
-    def ofS[T1, T2, T3, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, Unit, R] = macro CoroutineMacros.synthesize[R]
-
-    // of function
-    def ofF[R](f: () => R): Coroutine._0[Nothing, R] = macro CoroutineMacros.synthesize[R]
-    def ofF[T1, R](f: T1 => R): Coroutine._1[T1, Nothing, R] = macro CoroutineMacros.synthesize[R]
-    def ofF[T1, T2, R](f: (T1, T2) => R): Coroutine._2[T1, T2, Nothing, R] = macro CoroutineMacros.synthesize[R]
-    def ofF[T1, T2, T3, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, Nothing, R] = macro CoroutineMacros.synthesize[R]
-
+  trait CoroutineBuilder[Y] {
+    def of[R](f: () => R): Coroutine._0[Y, R] = macro CoroutineMacros.synthesize[R]
+    def of[T1, R](f: T1 => R): Coroutine._1[T1, Y, R] = macro CoroutineMacros.synthesize[R]
+    def of[T1, T2, R](f: (T1, T2) => R): Coroutine._2[T1, T2, Y, R] = macro CoroutineMacros.synthesize[R]
+    def of[T1, T2, T3, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, Y, R] = macro CoroutineMacros.synthesize[R]
   }
+
+  def coroutine[Y]: CoroutineBuilder[Y] = new CoroutineBuilder[Y] {}
+
+  // Coroutine._0[Nothing, R] => never yields, is this a case we care about? would need to statically evaluate
+
+  // Coroutines that yield unit values only, ie nothing useful
+  // Coroutine._0[Unit, R] => may yield, is this a case we care about?
+
+  // of suspendable
+  def ofS[R](f: () => R): Coroutine._0[Unit, R] = macro CoroutineMacros.synthesize[R]
+  def ofS[T1, R](f: T1 => R): Coroutine._1[T1, Unit, R] = macro CoroutineMacros.synthesize[R]
+  def ofS[T1, T2, R](f: (T1, T2) => R): Coroutine._2[T1, T2, Unit, R] = macro CoroutineMacros.synthesize[R]
+  def ofS[T1, T2, T3, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, Unit, R] = macro CoroutineMacros.synthesize[R]
+
+  // of function
+  def ofF[R](f: () => R): Coroutine._0[Nothing, R] = macro CoroutineMacros.synthesize[R]
+  def ofF[T1, R](f: T1 => R): Coroutine._1[T1, Nothing, R] = macro CoroutineMacros.synthesize[R]
+  def ofF[T1, T2, R](f: (T1, T2) => R): Coroutine._2[T1, T2, Nothing, R] = macro CoroutineMacros.synthesize[R]
+  def ofF[T1, T2, T3, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, Nothing, R] = macro CoroutineMacros.synthesize[R]
 
   // Y A R
   // auto convert FunctionN to tupled version A => R
   //def coroutineYR[Y, R](f: CR0[Y,R]): Coroutine._0[Y, R] = macro Coroutine.synthesize[R]
 
-  // these are the optimized versions
-  def coroutine[Y, R](f: () => R): Coroutine._0[_, R] = macro CoroutineMacros.synthesize[R]
-  def coroutine[T1, Y, R](f: T1 => R): Coroutine._1[T1, _, R] = macro CoroutineMacros.synthesize[R]
-  def coroutine[T1, T2, Y, R](f: (T1, T2) => R): Coroutine._2[T1, T2, _, R] = macro CoroutineMacros.synthesize[R]
-  def coroutine[T1, T2, T3, Y, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, _, R] = macro CoroutineMacros.synthesize[R]
+  // Replaced with cr.inst(..args)
+  //def call[R](f: R): Any = macro CoroutineMacros.call[R]
 
-  //def coroutine[Y, R, F](f: F): Coroutine.FactoryDefMarker[(Y, R)] = macro Coroutine.synthesize
+  // these are the optimized versions
+  def coroutine[Y, R](f: () => R): Coroutine._0[_, R] = macro CoroutineLegacyMacros.synthesize[R]
+  def coroutine[T1, Y, R](f: T1 => R): Coroutine._1[T1, _, R] = macro CoroutineLegacyMacros.synthesize[R]
+  def coroutine[T1, T2, Y, R](f: (T1, T2) => R): Coroutine._2[T1, T2, _, R] = macro CoroutineLegacyMacros.synthesize[R]
+  def coroutine[T1, T2, T3, Y, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, _, R] = macro CoroutineLegacyMacros.synthesize[R]
 
   /* syntax sugar */
 

@@ -41,7 +41,7 @@ class EnumeratorsBoxingBench extends JBench.Forked[Long] {
   @curve("coroutine")
   @ctx("noBoxingContext")
   def applyInstanceTestNoReturn(size: Int) {
-    val id = coroutine { (n: Int) =>
+    val id = coroutine[Int].of { (n: Int) =>
       var i = 0
       while (i < n) {
         yieldval(i)
@@ -49,7 +49,7 @@ class EnumeratorsBoxingBench extends JBench.Forked[Long] {
       }
     }
     var i = 0
-    val instance = call(id(size))
+    val instance = id.inst(size)
     val enumerator = Enumerator(instance)
   }
 
@@ -58,7 +58,7 @@ class EnumeratorsBoxingBench extends JBench.Forked[Long] {
   @curve("coroutine")
   @ctx("noBoxingContext")
   def applyCoroutine_0TestNoReturn(size: Int) {
-    val rube = coroutine { () =>
+    val rube = coroutine[Int].of { () =>
       yieldval(1)
       yieldval(2)
       yieldval(3)
@@ -71,7 +71,7 @@ class EnumeratorsBoxingBench extends JBench.Forked[Long] {
   @curve("coroutine")
   @ctx("noBoxingContext")
   def applyInstanceTestReturn(size: Int) {
-    val idDifferentReturnType = coroutine { (n: Int) =>
+    val idDifferentReturnType = coroutine[Int].of { (n: Int) =>
       var i = 0
       while (i < n) {
         yieldval(i)
@@ -80,7 +80,7 @@ class EnumeratorsBoxingBench extends JBench.Forked[Long] {
       "foo"
     }
 
-    val idSameReturnType = coroutine { (n: Int) =>
+    val idSameReturnType = coroutine[Int].of { (n: Int) =>
       var i = 0
       while (i < n) {
         yieldval(i)
@@ -90,8 +90,8 @@ class EnumeratorsBoxingBench extends JBench.Forked[Long] {
     }
 
     var i = 0
-    val foo = Enumerator(call(idDifferentReturnType(size)))
-    val bar = Enumerator(call(idSameReturnType(size)))
+    val foo = Enumerator(idDifferentReturnType.inst(size))
+    val bar = Enumerator(idSameReturnType.inst(size))
   }
 
   @gen("sizes")
@@ -99,13 +99,13 @@ class EnumeratorsBoxingBench extends JBench.Forked[Long] {
   @curve("coroutine")
   @ctx("noBoxingContext")
   def applyCoroutine_0TestReturn(size: Int) {
-    val rubeDifferentReturnType = coroutine { () =>
+    val rubeDifferentReturnType = coroutine[Int].of { () =>
       yieldval(1)
       yieldval(2)
       yieldval(3)
       "bar"
     }
-    val rubeSameReturnType = coroutine { () =>
+    val rubeSameReturnType = coroutine[Int].of { () =>
       yieldval(1)
       yieldval(2)
       yieldval(3)

@@ -6,14 +6,14 @@ import scala.util.Random
 
 object ControlTransferWithPull {
   var error: String = ""
-  val check = cr.yielding[Boolean].of { () =>
+  val check = coroutine[Boolean].of { () =>
     yieldval(true)
     error = "Total failure."
     yieldval(false)
   }
   val checker = check.inst()
 
-  val random = cr.yielding[Double].of { () =>
+  val random = coroutine[Double].of { () =>
     yieldval(Random.nextDouble())
     yieldto(checker)
     yieldval(Random.nextDouble())

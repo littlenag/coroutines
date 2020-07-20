@@ -91,10 +91,10 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
   }
 
   test("no yields allowed inside async statements 2") {
-    val c = coroutine { () =>
+    val c = coroutine[Int].of { () =>
       yieldval(0)
     }
-    val instance = call(c())
+    val instance = c.inst()
 
     """val future = AsyncAwait.async {
       yieldto(instance)

@@ -7,12 +7,12 @@ import scala.util.Failure
 
 class YieldToTest extends funsuite.AnyFunSuite {
   test("after resuming to another coroutine, there should be no value") {
-    val another = cr.yielding[String].of { () =>
+    val another = coroutine[String].of { () =>
       yieldval("Yohaha")
     }
     val anotherInstance = another.inst()
 
-    val rube = cr.yielding[String].of { () =>
+    val rube = coroutine[String].of { () =>
       yieldval("started")
       yieldto(anotherInstance)
     }
@@ -31,15 +31,15 @@ class YieldToTest extends funsuite.AnyFunSuite {
   }
 
   test("yielding to a completed coroutine raises an error") {
-    val another = coroutine { () => "in and out" }
-    val anotherInstance = call(another())
+    val another = coroutine[Nothing].of { () => "in and out" }
+    val anotherInstance = another.inst()
     assert(!anotherInstance.resume)
 
-    val rube = coroutine { () =>
+    val rube = coroutine[String].of { () =>
       yieldto(anotherInstance)
       yieldval("some more")
     }
-    val c = call(rube())
+    val c = rube.inst()
     assert(!c.resume)
     c.tryResult match {
       case Failure(e: CoroutineStoppedException) =>
@@ -48,17 +48,17 @@ class YieldToTest extends funsuite.AnyFunSuite {
   }
 
   test("should be able to yield to a differently typed coroutine") {
-    val another: ~~~>[String, Unit] = coroutine { () =>
+    val another: ~~~>[String, Unit] = coroutine[String].of { () =>
       yieldval("hohoho")
     }
-    val anotherInstance = call(another())
+    val anotherInstance = another.inst()
 
-    val rube: Int ~~> (Int, Int) = coroutine { (x: Int) =>
+    val rube: Int ~~> (Int, Int) = coroutine[Int].of { (x: Int) =>
       yieldval(-x)
       yieldto(anotherInstance)
       x
     }
-    val c = call(rube(5))
+    val c = rube.inst(5)
 
     assert(c.resume)
     assert(c.value == -5)
@@ -71,18 +71,18 @@ class YieldToTest extends funsuite.AnyFunSuite {
   }
 
   test("should drain the coroutine instance that yields to another coroutine") {
-    val another: ~~~>[String, Unit] = coroutine { () =>
+    val another: ~~~>[String, Unit] = coroutine[String].of { () =>
       yieldval("uh-la-la")
     }
-    val anotherInstance = call(another())
+    val anotherInstance = another.inst()
 
-    val rube: (Int, Int) ~> (Int, Unit) = coroutine { (x: Int, y: Int) =>
+    val rube: (Int, Int) ~> (Int, Unit) = coroutine[Int].of { (x: Int, y: Int) =>
       yieldval(x)
       yieldval(y)
       yieldto(anotherInstance)
       yieldval(x * y)
     }
-    val c = call(rube(5, 4))
+    val c = rube.inst(5, 4)
 
     val b = mutable.Buffer[Int]()
     while (c.resume) if (c.hasValue) b += c.value

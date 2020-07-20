@@ -178,7 +178,7 @@ class DataflowVariableBench extends JBench.OfflineReport {
   @transient lazy val forkJoinPool = new ForkJoinPool
 
   def task[T](body: ~~~>[DataflowVar[T], Unit]) {
-    val c = call(body())
+    val c = body.inst()
     schedule(c)
   }
 
@@ -201,7 +201,7 @@ class DataflowVariableBench extends JBench.OfflineReport {
   }
 
   class DataflowVar[T] extends AtomicReference[AnyRef](Nil) {
-    val apply = coroutine { () =>
+    val apply = coroutine[Int].of { () =>
       if (this.get.isInstanceOf[List[_]]) yieldval(this)
       this.get.asInstanceOf[T]
     }
@@ -232,7 +232,7 @@ class DataflowVariableBench extends JBench.OfflineReport {
   def coroutineProducerConsumer(sz: Int) = {
     val root = new DataflowVar[DataflowStream[String]]
     val done = Promise[Boolean]()
-    val producer = coroutine { () =>
+    val producer = coroutine[Int].of { () =>
       var left = sz
       var tail = root
       while (left > 0) {
@@ -241,7 +241,7 @@ class DataflowVariableBench extends JBench.OfflineReport {
         left -= 1
       }
     }
-    val consumer = coroutine { () =>
+    val consumer = coroutine[Int].of { () =>
       var left = sz
       var tail = root
       while (left > 0) {
@@ -265,7 +265,7 @@ class DataflowVariableBench extends JBench.OfflineReport {
     val root = new DataflowVar[DataflowStream[String]]
     val tokens = new DataflowVar[DataflowStream[String]]
     val done = Promise[Boolean]()
-    val producer = coroutine { () =>
+    val producer = coroutine[Int].of { () =>
       var left = sz
       var tail = root
       var tokenTail = tokens
@@ -287,7 +287,7 @@ class DataflowVariableBench extends JBench.OfflineReport {
       }
       t
     }
-    val consumer = coroutine { () =>
+    val consumer = coroutine[Int].of { () =>
       var left = sz
       var tail = root
       var tokenTail = startTokens

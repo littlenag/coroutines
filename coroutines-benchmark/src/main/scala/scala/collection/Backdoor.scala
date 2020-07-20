@@ -17,7 +17,7 @@ object Backdoor {
   }
 
   val redBlackEnumeratorInlined: Coroutine._1[RBTree[String], String, Unit] =
-    coroutine { (tree: RBTree[String]) =>
+    coroutine[Int].of { (tree: RBTree[String]) =>
       if (tree.left != null) {
         if (tree.left.left != null) redBlackEnumerator(tree.left.left)
         yieldval(tree.left.key)
@@ -32,7 +32,7 @@ object Backdoor {
     }
 
   val redBlackEnumerator: Coroutine._1[RBTree[String], String, Unit] =
-    coroutine { (tree: RBTree[String]) =>
+    coroutine[Int].of { (tree: RBTree[String]) =>
       if (tree.left != null) redBlackEnumerator(tree.left)
       yieldval(tree.key)
       if (tree.right != null) redBlackEnumerator(tree.right)
@@ -45,7 +45,7 @@ object Backdoor {
   }
 
   val hashSetEnumerator: Coroutine._1[Array[AnyRef], String, Unit] =
-    coroutine { (table: Array[AnyRef]) =>
+    coroutine[Int].of { (table: Array[AnyRef]) =>
       var i = 0
       while (i < table.length) {
         val x = table(i)

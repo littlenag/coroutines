@@ -7,7 +7,7 @@ import org.coroutines._
 
 
 object FaqSimpleExample {
-  val range = coroutine { (n: Int) =>
+  val range = coroutine[Int].of { (n: Int) =>
     var i = 0
     while (i < n) {
       yieldval(i)
@@ -22,7 +22,7 @@ object FaqSimpleExample {
   }
 
   def main(args: Array[String]) {
-    val instance = call(range(10))
+    val instance = range.inst(10)
     val elems = extract(instance)
     assert(elems == (0 until 10))
   }

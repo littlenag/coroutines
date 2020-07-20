@@ -11,15 +11,13 @@ class NextValTest extends funsuite.AnyFunSuite {
 
   test("next-val statement") {
 
-    val echo : String ~~~> Unit = desugar {
-      coroutine { () =>
-        val e = next[String]()
-        yieldval(e)
-        ()
-      }
+    val echo = coroutine[String].of { () =>
+      val e = next[String]()
+      yieldval(e)
     }
 
-    val e: String <~> Unit = call(echo())
+
+    val e = echo.inst()
     assert(e.resume)
     assert(e.expectsResumeValue)
     assert(e.resumeWithValue("5"))

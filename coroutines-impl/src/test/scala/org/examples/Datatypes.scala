@@ -7,7 +7,7 @@ import org.coroutines._
 
 
 object Datatypes {
-  val whileRange = coroutine { (n: Int) =>
+  val whileRange = coroutine[Int].of { (n: Int) =>
     var i = 0
     while (i < n) {
       yieldval(i)
@@ -15,7 +15,7 @@ object Datatypes {
     }
   }
 
-  val doWhileRange = coroutine { (n: Int) =>
+  val doWhileRange = coroutine[Int].of { (n: Int) =>
     var i = 0
     do {
       yieldval(i)
@@ -24,7 +24,7 @@ object Datatypes {
   }
 
   def assertEqualsRange(n: Int, co: Int ~~> (Int, Unit)) {
-    val c = call(co(n))
+    val c = co.inst(n)
     for (i <- 0 until n) {
       c.resume
       assert(c.value == i)

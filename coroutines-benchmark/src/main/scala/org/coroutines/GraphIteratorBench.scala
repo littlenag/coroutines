@@ -69,7 +69,7 @@ class GraphIteratorBench extends JBench.OfflineReport {
         i += 1
       }
     }
-    dfsEnumerator = coroutine { (g: Graph[String]) =>
+    dfsEnumerator = coroutine[Int].of { (g: Graph[String]) =>
       val visited = new Array[Boolean](g.indexCount)
       val stack = mutable.ArrayBuffer[Node[String]]()
       for (n <- g.roots) {
@@ -100,7 +100,7 @@ class GraphIteratorBench extends JBench.OfflineReport {
         i += 1
       }
     }
-    bfsEnumerator = coroutine { (g: Graph[String]) =>
+    bfsEnumerator = coroutine[Int].of { (g: Graph[String]) =>
       val visited = new Array[Boolean](g.indexCount)
       val queue = mutable.Queue[Node[String]]()
       for (n <- g.roots) {
@@ -123,7 +123,7 @@ class GraphIteratorBench extends JBench.OfflineReport {
   def coroutineSparseDfs(g: Graph[String]) = {
     val buffer = mutable.Buffer[String]()
     initDfsEnumerator()
-    val c = call(dfsEnumerator(g))
+    val c = dfsEnumerator.inst(g)
     while (c.resume) {
       val s = c.value
       buffer += s
@@ -150,7 +150,7 @@ class GraphIteratorBench extends JBench.OfflineReport {
   def coroutineDenseDfs(g: Graph[String]) = {
     val buffer = mutable.Buffer[String]()
     initDfsEnumerator()
-    val c = call(dfsEnumerator(g))
+    val c = dfsEnumerator.inst(g)
     while (c.resume) {
       val s = c.value
       buffer += s
@@ -177,7 +177,7 @@ class GraphIteratorBench extends JBench.OfflineReport {
   def coroutineSparseBfs(g: Graph[String]) = {
     val buffer = mutable.Buffer[String]()
     initBfsEnumerator()
-    val c = call(bfsEnumerator(g))
+    val c = bfsEnumerator.inst(g)
     while (c.resume) {
       val s = c.value
       buffer += s

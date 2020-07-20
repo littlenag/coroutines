@@ -9,7 +9,7 @@ import scala.collection._
 
 
 class EnumeratorsTest extends funsuite.AnyFunSuite {
-  val rube = coroutine { () =>
+  val rube = coroutine[Int].of { () =>
     yieldval(1)
     yieldval(2)
     yieldval(3)
@@ -17,7 +17,7 @@ class EnumeratorsTest extends funsuite.AnyFunSuite {
 
   // Asserts that `apply` takes a `snapshot` of the instance.
   test("enumerator creation from coroutine instance") {
-    val instance = call(rube())
+    val instance = rube.inst()
 
     val enumerator1 = Enumerator(instance)
     assert(enumerator1.hasNext())
@@ -69,7 +69,7 @@ class EnumeratorsTest extends funsuite.AnyFunSuite {
   }
 
   test("enumerator should ignore return value of coroutine") {
-    val rubeWithReturn = coroutine { () =>
+    val rubeWithReturn = coroutine[Int].of { () =>
       yieldval(1)
       yieldval(2)
       yieldval(3)

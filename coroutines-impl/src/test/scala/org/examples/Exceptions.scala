@@ -11,7 +11,7 @@ import scala.util.Failure
 object Exceptions {
   case class TestException() extends Throwable
 
-  val kaboom = coroutine { (x: Int) =>
+  val kaboom = coroutine[Any].of { (x: Int) =>
     yieldval(x)
     try {
       sys.error("will be caught")
@@ -22,7 +22,7 @@ object Exceptions {
   }
 
   def main(args: Array[String]) {
-    val c = call(kaboom(5))
+    val c = kaboom.inst(5)
     assert(c.resume)
     assert(c.value == 5)
     assert(c.resume)
