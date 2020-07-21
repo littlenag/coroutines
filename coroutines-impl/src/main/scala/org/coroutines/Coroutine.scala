@@ -364,7 +364,7 @@ object Coroutine {
   trait FactoryDefMarker[YR]
 
   // Requires 0 arguments to create a coroutine instance
-  abstract class _0[@specialized Y, R] extends Coroutine[/*Unit,*/ Y, R] {
+  trait _0[@specialized Y, R] extends Coroutine[/*Unit,*/ Y, R] {
     def apply(): R //= sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)
     def inst(): Instance[Y, R] = $call()
     def $call(): Instance[Y, R]
@@ -373,7 +373,7 @@ object Coroutine {
   }
 
   // Requires 1 argument to create a coroutine instance
-  abstract class _1[A0, @specialized Y, R] extends Coroutine[/*Tuple1[A0],*/ Y, R] {
+  trait _1[A0, @specialized Y, R] extends Coroutine[/*Tuple1[A0],*/ Y, R] {
     def apply(a0: A0): R //= sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)
     def inst(a0: A0): Instance[Y, R] = $call(a0)
     def $call(a0: A0): Instance[Y, R]
@@ -382,7 +382,7 @@ object Coroutine {
   }
 
   // Requires 2 arguments to create a coroutine instance
-  abstract class _2[A0, A1, @specialized Y, R] extends Coroutine[/*(A0, A1),*/ Y, R] {
+  trait _2[A0, A1, @specialized Y, R] extends Coroutine[/*(A0, A1),*/ Y, R] {
     def apply(a0: A0, a1: A1): R //= sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)
     def inst(a0: A0, a1: A1): Instance[Y, R] = $call(a0, a1)
     def $call(a0: A0, a1: A1): Instance[Y, R]
@@ -391,7 +391,7 @@ object Coroutine {
   }
 
   // Requires 3 arguments to create a coroutine instance
-  abstract class _3[A0, A1, A2, @specialized Y, R] extends Coroutine[/*(A0, A1, A2),*/ Y, R] {
+  trait _3[A0, A1, A2, @specialized Y, R] extends Coroutine[/*(A0, A1, A2),*/ Y, R] {
     def apply(a0: A0, a1: A1, a2: A2): R //= sys.error(COROUTINE_DIRECT_APPLY_ERROR_MESSAGE)
     def inst(a0: A0, a1: A1, a2: A2): Instance[Y, R] = $call(a0, a1, a2)
     def $call(a0: A0, a1: A1, a2: A2): Instance[Y, R]
