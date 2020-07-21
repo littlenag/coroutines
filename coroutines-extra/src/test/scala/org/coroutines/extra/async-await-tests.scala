@@ -21,7 +21,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
    *  after `AsyncAwait.await(f1)` evaluates to `true`.
    */
   test("simple test") {
-    val future = async {
+    val future = async[AnyVal, Int] {
       val f1 = Future(true)
       val f2 = Future(42)
       if (await(f1)) {
@@ -40,10 +40,10 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
    *  `await(trueFuture)` evaluates to true.
    */
   test("nested async blocks") {
-    val outerFuture = async {
+    val outerFuture = async[AnyVal, Int] {
       val trueFuture = Future { true }
       if (await(trueFuture)) {
-        val innerFuture = async {
+        val innerFuture = async[Int, Int] {
           await(Future { 100 } )
         }
         await(innerFuture)
@@ -60,7 +60,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
   test("error handling test 1") {
     val errorMessage = "System error!"
     val exception = intercept[RuntimeException] {
-      val future = async {
+      val future = async[String, String] {
         sys.error(errorMessage)
         await(Future("dog"))
       }
@@ -72,7 +72,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
   test("error handling test 2") {
     val errorMessage = "Internal await error"
     val exception = intercept[RuntimeException] {
-      val future = async {
+      val future = async[String, Unit] {
         await(Future {
           sys.error(errorMessage)
           "Here ya go"
@@ -107,7 +107,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
    *  type `Future[Unit]` but finding `Future[Nothing]`.
    */
   test("uncaught exception within async after await") {
-    val future = async {
+    val future = async[Unit, Unit] {
       await(Future(()))
       throw new TestException
       ()
@@ -120,7 +120,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
   // Source: https://git.io/vowdk
   test("await failing future within async") {
     val base = Future[Int] { throw new TestException }
-    val future = async {
+    val future = async[Int, Int] {
       val x = await(base)
       x * 2
     }
@@ -133,7 +133,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
    */
   test("await failing future within async after await") {
     val base = Future[Any] { "five!".length }
-    val future = async {
+    val future = async[Any, String] {
       val a = await(base.mapTo[Int])
       val b = await(Future { (a * 2).toString }.mapTo[Int])
       val c = await(Future { (7 * 2).toString })
@@ -146,10 +146,11 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
 
   test("nested failing future within async after await") {
     val base = Future[Any] { "five!".length }
-    val future = async {
+    val future = async[Any, String] {
       val a = await(base.mapTo[Int])
       val b = await(
-        await(Future((Future { (a * 2).toString }).mapTo[Int])))
+        await(Future((Future { (a * 2).toString }).mapTo[Int]))
+      )
       val c = await(Future { (7 * 2).toString })
       b + "-" + c
     }
@@ -159,13 +160,13 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
   }
 
   test("await should bubble up exceptions") {
-    def thrower() = {
+    def thrower(): Future[Int] = {
       throw new TestException
       Future(1)
     }
 
     var exceptionFound = false
-    val future = async {
+    val future = async[Int, Unit] {
       try {
         await(thrower())
         ()
@@ -183,7 +184,7 @@ class AsyncAwaitTest extends funsuite.AnyFunSuite with Matchers {
     }
 
     var exceptionFound = false
-    val future = async {
+    val future = async[Int, Unit] {
       try {
         await(failer())
         ()

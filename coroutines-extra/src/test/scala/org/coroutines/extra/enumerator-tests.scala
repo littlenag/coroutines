@@ -54,7 +54,7 @@ class EnumeratorsTest extends funsuite.AnyFunSuite {
   }
 
   test("enumerator creation from code block") {
-    val enumerator = Enumerator {
+    val enumerator = Enumerator[Int, Unit] {
       var i = 0
       while (i < 5) {
         yieldval(i)

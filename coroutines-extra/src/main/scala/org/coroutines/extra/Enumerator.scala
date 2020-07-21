@@ -44,11 +44,11 @@ object Enumerator {
 
   def apply[Y, R](body: =>R): Enumerator[Y] = macro applyMacro[Y, R]
 
-  def applyMacro[Y, R](c: Context)(body: c.Tree): c.Tree = {
+  def applyMacro[Y: c.WeakTypeTag, R](c: Context)(body: c.Tree): c.Tree = {
     import c.universe._
 
     q"""
-       Enumerator(coroutine[Int].of { () =>
+       Enumerator(coroutine[${weakTypeOf[Y]}].of { () =>
          $body
        })
      """

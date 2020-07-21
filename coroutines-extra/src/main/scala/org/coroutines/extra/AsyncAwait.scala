@@ -20,7 +20,7 @@ object AsyncAwait {
    *          into the coroutine. The coroutine will directly return the
    *          result of the future.
    */
-  def await[R]: Future[R] ~~> (Future[R], R) =
+  def await[R]: Coroutine._1[Future[R], Future[R], R] =
     coroutine[Future[R]].of { (awaitedFuture: Future[R]) =>
       yieldval(awaitedFuture)
       var result: R = null.asInstanceOf[R]
@@ -39,7 +39,7 @@ object AsyncAwait {
    *               if `body` throws an exception or one of the `await`s takes a failed
    *               future.
    */
-  def asyncCall[Y, R](body: ~~~>[Future[Y], R]): Future[R] = {
+  def asyncCall[Y, R](body: Coroutine._0[Future[Y], R]): Future[R] = {
     val c = body.inst()
     val p = Promise[R]
     def loop() {
@@ -68,7 +68,7 @@ object AsyncAwait {
    *  @param body  The block of code to wrap inside an asynchronous coroutine.
    *  @return      A `Future` wrapping the result of `body`.
    */
-  def async[Y, R](body: =>R): Future[R] = macro asyncMacro[Y, R]
+  def async[Y, R](body: => R): Future[R] = macro asyncMacro[Y, R]
 
   /** Implements `async`.
    *
@@ -122,7 +122,7 @@ object AsyncAwait {
     new NoYieldsValidator().traverse(body)
 
     q"""
-       val c = coroutine[_ <: AnyRef].of { () =>
+       val c = coroutine[Future[${weakTypeOf[Y]}]].of { () =>
          $body
        }
        _root_.org.coroutines.extra.AsyncAwait.asyncCall(c)
