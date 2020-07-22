@@ -105,85 +105,64 @@ package object coroutines {
   /* syntax sugar */
 
   type <~>[Y, R] = Coroutine.Instance[Y, R]
+  type @@[Y,R] = Tuple2[Y,R]
+
 
   implicit def yrcoroutine0[Y, R](b: Coroutine._0[Y, R]): Unit -> (Y @@ R) = {
-
-    type YY = Y
-    type RR = R
-
-    val adapterYR = new ArityAdapter[Unit, Y, R] {
+    val adapterYR = new ArityAdapter[Unit, @@[Y,R]] {
       //def apply(): R = b.apply()
-      def inst(a:Unit): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.inst()
-      def $call(a:Unit): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.$call()
-      def $push(c: _root_.org.coroutines.Coroutine.Instance[Y, R])(a:Unit): Unit = b.$push(c)
+      override def inst[YI, RI](a: Unit)(implicit yr: @@[YI,RI] =:= @@[Y,R]): _root_.org.coroutines.Coroutine.Instance[YI, RI] =
+        b.inst().asInstanceOf[Coroutine.Instance[YI,RI]]
+      //def $call(a:Unit): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.$call()
+      //def $push(c: _root_.org.coroutines.Coroutine.Instance[Y, R])(a:Unit): Unit = b.$push(c)
     }
 
-    new ->[Unit, @@[Y,R]](new @@[Y,R](b)) { self =>
-      type Y = YY
-      type R = RR
-      val adapter = adapterYR
-      val yr = new @@[self.Y,self.R](b)
-    }
+    ->[Unit, @@[Y,R]](adapterYR)
   }
 
   implicit def yrcoroutine1[A0, Y, R](b: Coroutine._1[A0, Y, R]): A0 -> (Y @@ R) = {
 
-    type YY = Y
-    type RR = R
-
-    val adapterYR = new ArityAdapter[A0, Y, R] {
+    val adapterYR = new ArityAdapter[A0, @@[Y,R]] {
       //def apply(): R = b.apply()
-      def inst(a0:A0): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.inst(a0)
-      def $call(a0:A0): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.$call(a0)
-      def $push(c: _root_.org.coroutines.Coroutine.Instance[Y, R])(a0:A0): Unit = b.$push(c,a0)
+      override def inst[YI, RI](a: A0)(implicit yr: YI @@ RI =:= @@[Y,R]): _root_.org.coroutines.Coroutine.Instance[YI, RI] =
+        b.inst(a).asInstanceOf[Coroutine.Instance[YI,RI]]
+
+      //def $call(a0:A0): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.$call(a0)
+      //def $push(c: _root_.org.coroutines.Coroutine.Instance[Y, R])(a0:A0): Unit = b.$push(c,a0)
     }
 
-    new ->[A0, @@[Y,R]](new @@[Y,R](b)) { self =>
-      type Y = YY
-      type R = RR
-      val adapter = adapterYR
-      val yr = new @@[self.Y,self.R](b)
-    }
+    ->[A0, @@[Y,R]](adapterYR)
   }
 
   implicit def yrcoroutine2[A0, A1, Y, R](b: Coroutine._2[A0, A1, Y, R]): (A0, A1) -> (Y @@ R) = {
 
-    type YY = Y
-    type RR = R
+    type YR = @@[Y,R]
 
-    val adapterYR = new ArityAdapter[(A0, A1), Y, R] {
+    val adapterYR = new ArityAdapter[(A0, A1), @@[Y,R]] {
       //def apply(): R = b.apply()
-      def inst(a:(A0,A1)): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.inst(a._1, a._2)
-      def $call(a:(A0,A1)): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.$call(a._1,a._2)
-      def $push(c: _root_.org.coroutines.Coroutine.Instance[Y, R])(a:(A0,A1)): Unit = b.$push(c,a._1,a._2)
+      override def inst[YI, RI](a: (A0,A1))(implicit yr: YI @@ RI =:= YR): _root_.org.coroutines.Coroutine.Instance[YI, RI] =
+        b.inst(a._1,a._2).asInstanceOf[Coroutine.Instance[YI,RI]]
+
+      //def $call(a:(A0,A1)): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.$call(a._1,a._2)
+      //def $push(c: _root_.org.coroutines.Coroutine.Instance[Y, R])(a:(A0,A1)): Unit = b.$push(c,a._1,a._2)
     }
 
-    new ->[(A0,A1), @@[Y,R]](new @@[Y,R](b)) { self =>
-      type Y = YY
-      type R = RR
-      val adapter = adapterYR
-      val yr = new @@[self.Y,self.R](b)
-    }
+    ->[(A0,A1), @@[Y,R]](adapterYR)
   }
 
   implicit def yrcoroutine3[A0, A1, A2, Y, R](b: Coroutine._3[A0, A1, A2, Y, R]): (A0, A1, A2) -> (Y @@ R) = {
 
-    type YY = Y
-    type RR = R
+    type YR = @@[Y,R]
 
-    val adapterYR = new ArityAdapter[(A0, A1, A2), Y, R] {
+    val adapterYR = new ArityAdapter[(A0, A1, A2), @@[Y,R]] {
       //def apply(): R = b.apply()
-      def inst(a:(A0,A1,A2)): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.inst(a._1, a._2, a._3)
-      def $call(a:(A0,A1,A2)): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.$call(a._1,a._2,a._3)
-      def $push(c: _root_.org.coroutines.Coroutine.Instance[Y, R])(a:(A0,A1,A2)): Unit = b.$push(c,a._1,a._2,a._3)
+      override def inst[YI, RI](a: (A0,A1,A2))(implicit yr: YI @@ RI =:= YR): _root_.org.coroutines.Coroutine.Instance[YI, RI] =
+        b.inst(a._1,a._2,a._3).asInstanceOf[Coroutine.Instance[YI,RI]]
+      //def $call(a:(A0,A1,A2)): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.$call(a._1,a._2,a._3)
+      //def $push(c: _root_.org.coroutines.Coroutine.Instance[Y, R])(a:(A0,A1,A2)): Unit = b.$push(c,a._1,a._2,a._3)
     }
 
-    new ->[(A0,A1,A2), @@[Y,R]](new @@[Y,R](b)) { self =>
-      type Y = YY
-      type R = RR
-      val adapter = adapterYR
-      val yr = new @@[self.Y,self.R](b)
-    }
+    ->[(A0,A1,A2), @@[Y,R]](adapterYR)
   }
 
 

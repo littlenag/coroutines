@@ -103,7 +103,7 @@ class FriendlyTypeTest extends funsuite.AnyFunSuite {
   }
 
   test("use friendly type for coroutine artity 3") {
-    val rube: (Int,Int, Int) -> (Int @@ Int) = coroutine[Int].of { (x: Int, y: Int, z:Int) =>
+    val rube: (Int,Int,Int) -> (Int @@ Int) = coroutine[Int].of { (x: Int, y: Int, z:Int) =>
       val v = 0xDEADBEEF
       yieldval(v)
       x * y * z
