@@ -52,7 +52,7 @@ class FriendlyTypeTest extends funsuite.AnyFunSuite {
   }
 
   test("use friendly type for coroutine artity 0") {
-    val rube: Unit -> (Int @@ Unit) = coroutine[Int].of { () =>
+    val rube: Unit ~> (Int @@ Unit) = coroutine[Int].of { () =>
       val v = 0xDEADBEEF
       yieldval(v)
     }
@@ -68,7 +68,7 @@ class FriendlyTypeTest extends funsuite.AnyFunSuite {
   }
 
   test("use friendly type for coroutine artity 1") {
-    val rube: Int -> (Int @@ Int) = coroutine[Int].of { (x: Int) =>
+    val rube: Int ~> (Int @@ Int) = coroutine[Int].of { (x: Int) =>
       val v = 0xDEADBEEF
       yieldval(v)
       x
@@ -86,7 +86,7 @@ class FriendlyTypeTest extends funsuite.AnyFunSuite {
 
 
   test("use friendly type for coroutine artity 2") {
-    val rube: (Int,Int) -> (Int @@ Int) = coroutine[Int].of { (x: Int, y: Int) =>
+    val rube: (Int,Int) ~> (Int @@ Int) = coroutine[Int].of { (x: Int, y: Int) =>
       val v = 0xDEADBEEF
       yieldval(v)
       x * y
@@ -103,7 +103,7 @@ class FriendlyTypeTest extends funsuite.AnyFunSuite {
   }
 
   test("use friendly type for coroutine artity 3") {
-    val rube: (Int,Int,Int) -> (Int @@ Int) = coroutine[Int].of { (x: Int, y: Int, z:Int) =>
+    val rube: (Int,Int,Int) ~> (Int @@ Int) = coroutine[Int].of { (x: Int, y: Int, z:Int) =>
       val v = 0xDEADBEEF
       yieldval(v)
       x * y * z

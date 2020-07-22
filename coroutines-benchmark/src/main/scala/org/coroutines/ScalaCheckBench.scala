@@ -4,6 +4,7 @@ package org.coroutines
 
 import org.scalameter.api._
 import org.scalameter.japi.JBench
+
 import scala.collection._
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -113,7 +114,7 @@ class ScalaCheckBench extends JBench.OfflineReport {
   class Backtracker {
     val random = new Random(111)
 
-    val recurse: (Unit <~> Unit) ~~> (Unit, Unit) = coroutine[Int].of { (c: Unit <~> Unit) =>
+    val recurse: (Unit <~> Unit) ~> (Unit @@ Unit) = coroutine[Int].of { (c: Unit <~> Unit) =>
       if (c.resume) {
         val saved = c.snapshot
         recurse(c)
@@ -123,14 +124,14 @@ class ScalaCheckBench extends JBench.OfflineReport {
       }
     }
 
-    val traverse = coroutine[Int].of { (snippet: ~~~>[Unit, Unit]) =>
+    val traverse = coroutine[Int].of { (snippet: Coroutine._0[Unit, Unit]) =>
       while (true) {
         val c = snippet.inst()
         recurse(c)
       }
     }
 
-    def backtrack(snippet: ~~~>[Unit, Unit], numTests: Int): Unit = {
+    def backtrack(snippet: Coroutine._0[Unit, Unit], numTests: Int): Unit = {
       var testsLeft = numTests
       val t = traverse.inst(snippet)
       for (i <- 0 until numTests) t.resume

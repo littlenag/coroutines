@@ -48,12 +48,12 @@ class YieldToTest extends funsuite.AnyFunSuite {
   }
 
   test("should be able to yield to a differently typed coroutine") {
-    val another: ~~~>[String, Unit] = coroutine[String].of { () =>
+    val another = coroutine[String].of { () =>
       yieldval("hohoho")
     }
     val anotherInstance = another.inst()
 
-    val rube: Int ~~> (Int, Int) = coroutine[Int].of { (x: Int) =>
+    val rube: Int ~> (Int @@ Int) = coroutine[Int].of { (x: Int) =>
       yieldval(-x)
       yieldto(anotherInstance)
       x
@@ -71,7 +71,7 @@ class YieldToTest extends funsuite.AnyFunSuite {
   }
 
   test("should drain the coroutine instance that yields to another coroutine") {
-    val another: ~~~>[String, Unit] = coroutine[String].of { () =>
+    val another = coroutine[String].of { () =>
       yieldval("uh-la-la")
     }
     val anotherInstance = another.inst()

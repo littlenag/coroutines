@@ -23,7 +23,7 @@ object Datatypes {
     } while (i < n)
   }
 
-  def assertEqualsRange(n: Int, co: Int ~~> (Int, Unit)) {
+  def assertEqualsRange(n: Int, co: Int ~> (Int @@ Unit)) {
     val c = co.inst(n)
     for (i <- 0 until n) {
       c.resume

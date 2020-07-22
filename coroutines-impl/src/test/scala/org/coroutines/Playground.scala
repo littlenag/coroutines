@@ -5,15 +5,17 @@ import org.scalatest._
 
 class Playground extends funsuite.AnyFunSuite {
 
-  test("nothing yield") {
-    desugar {
-      val rube = coroutine[Nothing].of { (x: Int) =>
-        val v = 0xDEADBEEF
-        //yieldval(v)
-        x
-      }
-    }
-  }
+  // FIXME broken $push for ~> type
+//  test("nothing yield") {
+//    desugar {
+//      var fibsugar: Int ~> (Unit @@ Int) = null
+//      //var fibsugar: Coroutine._1[Int, Unit, Int] = null
+//      fibsugar = coroutine[Unit].of { (n: Int) =>
+//        if (n <= 1) 1
+//        else fibsugar(n - 1) + fibsugar(n - 2)
+//      }
+//    }
+//  }
 
 //  test("friendly def syntax") {
 //    desugar {

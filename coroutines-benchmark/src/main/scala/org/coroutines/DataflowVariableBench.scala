@@ -4,8 +4,10 @@ package org.coroutines
 
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.atomic._
+
 import org.scalameter.api._
 import org.scalameter.japi.JBench
+
 import scala.annotation.tailrec
 import scala.collection._
 import scala.concurrent._
@@ -177,7 +179,7 @@ class DataflowVariableBench extends JBench.OfflineReport {
 
   @transient lazy val forkJoinPool = new ForkJoinPool
 
-  def task[T](body: ~~~>[DataflowVar[T], Unit]) {
+  def task[T](body: Coroutine._0[DataflowVar[T], Unit]) {
     val c = body.inst()
     schedule(c)
   }

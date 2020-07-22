@@ -10,6 +10,10 @@ package object coroutines {
     "Use `call(<coroutine>(<arg0>, ..., <argN>))` instead if you want to " +
     "start a new coroutine."
 
+  val COROUTINE_PUSH_ARITY_ERROR_MESSAGE =
+    "Calling $push is done internally. The correct arity function will be overriden and " +
+    "and an implementation provided. Do not call directly."
+
   def next[T](): T = {
     sys.error("Next allowed only inside coroutines.")
   }
@@ -37,15 +41,6 @@ package object coroutines {
   def yieldto[T](f: Coroutine.Instance[T, _]): Unit = {
     sys.error("YieldTo allowed only inside coroutines.")
   }
-
-  //def call[Y, R](f: Coroutine._0[Y, R]): Coroutine.Instance[Y, R] = macro Coroutine.call[Coroutine._0[Y, R]]
-  //def call[A0, Y, R](f: Coroutine._1[A0, Y, R]): Coroutine.Instance[Y, R] = macro Coroutine.call[Coroutine._1[A0, Y, R]]
-  //def call[A0, A1, Y, R](f: Coroutine._2[A0, A1, Y, R]): Coroutine.Instance[Y, R] = macro Coroutine.call[Coroutine._2[A0, A1, Y, R]]
-  //def call[A0, A1, A2, Y, R](f: Coroutine._3[A0, A1, A2, Y, R]): Coroutine.Instance[Y, R] = macro Coroutine.call[Coroutine._3[A0, A1, A2, Y, R]]
-
-  // Y = Yield Type
-  // R = Return Type
-  //def coroutine[Y, R](f: Any): Any = macro Coroutine.synthesize
 
   //Function
 
@@ -96,7 +91,7 @@ package object coroutines {
   // Replaced with cr.inst(..args)
   //def call[R](f: R): Any = macro CoroutineMacros.call[R]
 
-  // these are the optimized versions
+  // these are the optimized? versions
   def coroutine[Y, R](f: () => R): Coroutine._0[_, R] = macro CoroutineLegacyMacros.synthesize[R]
   def coroutine[T1, Y, R](f: T1 => R): Coroutine._1[T1, _, R] = macro CoroutineLegacyMacros.synthesize[R]
   def coroutine[T1, T2, Y, R](f: (T1, T2) => R): Coroutine._2[T1, T2, _, R] = macro CoroutineLegacyMacros.synthesize[R]
@@ -107,34 +102,36 @@ package object coroutines {
   type <~>[Y, R] = Coroutine.Instance[Y, R]
   type @@[Y,R] = Tuple2[Y,R]
 
-
-  implicit def yrcoroutine0[Y, R](b: Coroutine._0[Y, R]): Unit -> (Y @@ R) = {
+  implicit def coroutine0[Y, R](b: Coroutine._0[Y, R]): Unit ~> (Y @@ R) = {
     val adapterYR = new ArityAdapter[Unit, @@[Y,R]] {
       //def apply(): R = b.apply()
       override def inst[YI, RI](a: Unit)(implicit yr: @@[YI,RI] =:= @@[Y,R]): _root_.org.coroutines.Coroutine.Instance[YI, RI] =
         b.inst().asInstanceOf[Coroutine.Instance[YI,RI]]
       //def $call(a:Unit): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.$call()
-      //def $push(c: _root_.org.coroutines.Coroutine.Instance[Y, R])(a:Unit): Unit = b.$push(c)
+
+      override def $push[YI, RI](c: _root_.org.coroutines.Coroutine.Instance[YI, RI])(implicit yr: @@[YI,RI] =:= @@[Y,R]): Unit =
+        b.$push(c.asInstanceOf[Coroutine.Instance[Y,R]])
     }
 
-    ->[Unit, @@[Y,R]](adapterYR)
+    ~>[Unit, @@[Y,R]](adapterYR)
   }
 
-  implicit def yrcoroutine1[A0, Y, R](b: Coroutine._1[A0, Y, R]): A0 -> (Y @@ R) = {
+  implicit def coroutine1[A0, Y, R](b: Coroutine._1[A0, Y, R]): A0 ~> (Y @@ R) = {
 
     val adapterYR = new ArityAdapter[A0, @@[Y,R]] {
       //def apply(): R = b.apply()
       override def inst[YI, RI](a: A0)(implicit yr: YI @@ RI =:= @@[Y,R]): _root_.org.coroutines.Coroutine.Instance[YI, RI] =
         b.inst(a).asInstanceOf[Coroutine.Instance[YI,RI]]
-
       //def $call(a0:A0): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.$call(a0)
-      //def $push(c: _root_.org.coroutines.Coroutine.Instance[Y, R])(a0:A0): Unit = b.$push(c,a0)
+
+      override def $push[T1, YI, RI](c: _root_.org.coroutines.Coroutine.Instance[YI, RI], t1: T1)(implicit ps: A0 =:= T1, yr: @@[YI,RI] =:= @@[Y,R]): Unit =
+        b.$push(c.asInstanceOf[Coroutine.Instance[Y,R]],t1.asInstanceOf[A0])
     }
 
-    ->[A0, @@[Y,R]](adapterYR)
+    ~>[A0, @@[Y,R]](adapterYR)
   }
 
-  implicit def yrcoroutine2[A0, A1, Y, R](b: Coroutine._2[A0, A1, Y, R]): (A0, A1) -> (Y @@ R) = {
+  implicit def coroutine2[A0, A1, Y, R](b: Coroutine._2[A0, A1, Y, R]): (A0, A1) ~> (Y @@ R) = {
 
     type YR = @@[Y,R]
 
@@ -142,60 +139,48 @@ package object coroutines {
       //def apply(): R = b.apply()
       override def inst[YI, RI](a: (A0,A1))(implicit yr: YI @@ RI =:= YR): _root_.org.coroutines.Coroutine.Instance[YI, RI] =
         b.inst(a._1,a._2).asInstanceOf[Coroutine.Instance[YI,RI]]
-
       //def $call(a:(A0,A1)): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.$call(a._1,a._2)
-      //def $push(c: _root_.org.coroutines.Coroutine.Instance[Y, R])(a:(A0,A1)): Unit = b.$push(c,a._1,a._2)
+      override def $push[T1, T2, YI, RI](c: _root_.org.coroutines.Coroutine.Instance[YI, RI], t1: T1, t2: T2)(implicit ps: (A0,A1) =:= Tuple2[T1,T2], yr: @@[YI,RI] =:= @@[Y,R]): Unit =
+        b.$push(c.asInstanceOf[Coroutine.Instance[Y,R]],t1.asInstanceOf[A0],t2.asInstanceOf[A1])
     }
 
-    ->[(A0,A1), @@[Y,R]](adapterYR)
+    ~>[(A0,A1), @@[Y,R]](adapterYR)
   }
 
-  implicit def yrcoroutine3[A0, A1, A2, Y, R](b: Coroutine._3[A0, A1, A2, Y, R]): (A0, A1, A2) -> (Y @@ R) = {
+  implicit def coroutine3[A0, A1, A2, Y, R](b: Coroutine._3[A0, A1, A2, Y, R]): (A0, A1, A2) ~> (Y @@ R) = {
 
-    type YR = @@[Y,R]
+    //type YR = @@[Y,R]
 
     val adapterYR = new ArityAdapter[(A0, A1, A2), @@[Y,R]] {
       //def apply(): R = b.apply()
-      override def inst[YI, RI](a: (A0,A1,A2))(implicit yr: YI @@ RI =:= YR): _root_.org.coroutines.Coroutine.Instance[YI, RI] =
+      override def inst[YI, RI](a: (A0,A1,A2))(implicit yr: YI @@ RI =:= @@[Y,R]): _root_.org.coroutines.Coroutine.Instance[YI, RI] =
         b.inst(a._1,a._2,a._3).asInstanceOf[Coroutine.Instance[YI,RI]]
       //def $call(a:(A0,A1,A2)): _root_.org.coroutines.Coroutine.Instance[Y, R] = b.$call(a._1,a._2,a._3)
-      //def $push(c: _root_.org.coroutines.Coroutine.Instance[Y, R])(a:(A0,A1,A2)): Unit = b.$push(c,a._1,a._2,a._3)
+      override def $push[T1, T2, T3, YI, RI](c: _root_.org.coroutines.Coroutine.Instance[YI, RI], t1: T1, t2: T2, t3:T3)(implicit ps: (A0,A1,A2) =:= Tuple3[T1,T2,T3], yr: @@[YI,RI] =:= @@[Y,R]): Unit =
+        b.$push(c.asInstanceOf[Coroutine.Instance[Y,R]],t1.asInstanceOf[A0],t2.asInstanceOf[A1],t3.asInstanceOf[A2])
     }
 
-    ->[(A0,A1,A2), @@[Y,R]](adapterYR)
+    ~>[(A0,A1,A2), @@[Y,R]](adapterYR)
   }
 
-
-  implicit def coroutine0nothing[R](b: Coroutine._0[Nothing, R]) =
-    new ~~~>[Nothing, R](b)
-
-  implicit def coroutine0[@specialized S, R](b: Coroutine._0[S, R]) =
-    new ~~~>[S, R](b)
-
-  implicit def coroutine1nothing[T, R](b: Coroutine._1[T, Nothing, R]) =
-    new ~~>[T, (Nothing, R)](b)
-
-  implicit def coroutine1[T, @specialized S, R](b: Coroutine._1[T, S, R]) =
-    new ~~>[T, (S, R)](b)
-
-  implicit def coroutine2nothing[T1, T2, R](
-    b: Coroutine._2[T1, T2, Nothing, R]
-  ) = {
-    new ~>[Tuple2[T1, T2], (Nothing, R)](b)
-  }
-
-  implicit def coroutine2[T1, T2, @specialized S, R](b: Coroutine._2[T1, T2, S, R]) =
-    new ~>[Tuple2[T1, T2], (S, R)](b)
-
-  implicit def coroutine3nothing[T1, T2, T3, R](
-    b: Coroutine._3[T1, T2, T3, Nothing, R]
-  ) = {
-    new ~>[Tuple3[T1, T2, T3], (Nothing, R)](b)
-  }
-
-  implicit def coroutine3[T1, T2, T3, @specialized S, R](
-    b: Coroutine._3[T1, T2, T3, S, R]
-  ) = {
-    new ~>[Tuple3[T1, T2, T3], (S, R)](b)
-  }
+//  implicit def coroutine2nothing[T1, T2, R](
+//    b: Coroutine._2[T1, T2, Nothing, R]
+//  ) = {
+//    new ~>[Tuple2[T1, T2], (Nothing, R)](b)
+//  }
+//
+//  implicit def coroutine2[T1, T2, @specialized S, R](b: Coroutine._2[T1, T2, S, R]) =
+//    new ~>[Tuple2[T1, T2], (S, R)](b)
+//
+//  implicit def coroutine3nothing[T1, T2, T3, R](
+//    b: Coroutine._3[T1, T2, T3, Nothing, R]
+//  ) = {
+//    new ~>[Tuple3[T1, T2, T3], (Nothing, R)](b)
+//  }
+//
+//  implicit def coroutine3[T1, T2, T3, @specialized S, R](
+//    b: Coroutine._3[T1, T2, T3, S, R]
+//  ) = {
+//    new ~>[Tuple3[T1, T2, T3], (S, R)](b)
+//  }
 }
