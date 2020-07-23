@@ -126,7 +126,9 @@ def scalacOptionsC(scalaVersion: String) = {
 val filterTooStrictOptions = { options: Seq[String] =>
   options.filterNot(Set(
     "-Xfatal-warnings"
-  ))
+  )) ++ Seq(
+    "-Ymacro-debug-lite"
+  )
 }
 
 //lazy val `coroutines-benchmark` = (project in file("coroutines-benchmark"))
