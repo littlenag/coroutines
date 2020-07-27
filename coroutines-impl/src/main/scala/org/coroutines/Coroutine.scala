@@ -14,11 +14,19 @@ import scala.util.{Try, Success, Failure}
  */
 trait Coroutine[@specialized Y, R] extends Coroutine.FactoryDefMarker[(Y, R)] {
   def $enter(c: Coroutine.Instance[Y, R]): Unit
+  // sets resume state for suspend()
   def $suspend(c: Coroutine.Instance[Y, R]): Unit = {
+    c.$hasYield = false
+    c.$yield = null.asInstanceOf[Y]
+    c.$expectsResumeValue = false
+  }
+  // sets resume state for next()
+  def $awaitCellValue(c: Coroutine.Instance[Y, R]): Unit = {
     c.$hasYield = false
     c.$yield = null.asInstanceOf[Y]
     c.$expectsResumeValue = true
   }
+  // sets resume state for yield()
   def $assignyield(c: Coroutine.Instance[Y, R], v: Y): Unit = {
     c.$hasYield = true
     c.$yield = v
@@ -167,7 +175,7 @@ object Coroutine {
       } else throw CoroutineStoppedException()
     }
 
-    /** Advances the coroutine to the next suspend (yield or suspend) point.
+    /** Advances the coroutine to the next suspend (yield or suspend or next) point.
      *
      *  @return `true` if resume can be called again, `false` otherwise.
      *  @throws CoroutineStoppedException If the coroutine is not live.

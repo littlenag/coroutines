@@ -99,6 +99,9 @@ object AsyncAwait {
         case q"$qual.suspend()" if isCoroutinesPkg(qual) =>
           c.abort(tree.pos,
             "The 'suspend()' statement only be invoked directly inside the coroutine. ")
+        case q"$qual.awaitCellValue()" if isCoroutinesPkg(qual) =>
+          c.abort(tree.pos,
+            "The 'awaitCellValue()' statement only be invoked directly inside the coroutine. ")
         case q"$qual.next[$_]()" if isCoroutinesPkg(qual) =>
           c.abort(tree.pos,
             "The 'next[T]()' statement only be invoked directly inside the coroutine. ")

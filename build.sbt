@@ -127,7 +127,7 @@ val filterTooStrictOptions = { options: Seq[String] =>
   options.filterNot(Set(
     "-Xfatal-warnings"
   )) ++ Seq(
-    "-Ymacro-debug-lite"
+    //"-Ymacro-debug-lite"
   )
 }
 

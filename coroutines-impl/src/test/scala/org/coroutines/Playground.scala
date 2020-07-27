@@ -7,14 +7,19 @@ class Playground extends funsuite.AnyFunSuite {
 
   // FIXME broken $push for ~> type
   test("nothing yield") {
-    desugar {
+    //desugar {
       //var fibsugar: Int ~> (Unit, Int) = null
-      var fibsugar: Coroutine._1[Int, Unit, Int] = null
-      fibsugar = coroutine[Unit].of { (n: Int) =>
-        if (n <= 1) 1
+      //var fibsugar: Coroutine._1[Int, Unit, Int] = null
+      lazy val fibsugar: Coroutine._1[Int, Unit, Int] = coroutine[Unit].of { (n: Int) =>
+        if (n == 0) 0
+        else if (n == 1) 1
         else fibsugar(n - 1) + fibsugar(n - 2)
       }
-    }
+
+      val fib = fibsugar.inst(26)
+      assert(!fib.resume)
+      assert(fib.result === 121393)
+    //}
   }
 
 //  test("friendly def syntax") {

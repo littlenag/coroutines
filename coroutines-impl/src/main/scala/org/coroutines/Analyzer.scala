@@ -395,9 +395,11 @@ trait Analyzer[C <: Context] {
     def unapply(t: Tree): Option[Tree] = t match {
       case q"$qual.`package`.coroutine[$_]($_)" if isCoroutinesPkg(qual) =>
         Some(t)
+      case q"$qual.`package`.suspend()" if isCoroutinesPkg(qual) =>
+        Some(t)
       case q"$qual.`package`.pullcell[$_]()" if isCoroutinesPkg(qual) =>
         Some(t)
-      case q"$qual.`package`.suspend()" if isCoroutinesPkg(qual) =>
+      case q"$qual.`package`.awaitCellValue()" if isCoroutinesPkg(qual) =>
         Some(t)
       case q"$qual.`package`.next[$_]()" if isCoroutinesPkg(qual) =>
         Some(t)

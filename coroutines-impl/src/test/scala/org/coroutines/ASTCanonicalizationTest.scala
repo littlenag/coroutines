@@ -209,7 +209,7 @@ class ASTCanonicalizationTest extends funsuite.AnyFunSuite {
   // FIXME fails to pass for 2.13
   test("short-circuiting should work for and") {
     var state = "untouched"
-    val rube = ofF { (x: Int) =>
+    val rube = task { (x: Int) =>
       if (x < 0 && { state = "touched"; true }) x
       else -x
     }
@@ -230,7 +230,7 @@ class ASTCanonicalizationTest extends funsuite.AnyFunSuite {
   // FIXME fails to pass for 2.13
   test("short-circuiting should work for or") {
     var state = "untouched"
-    val rube = ofF { (x: Int) =>
+    val rube = task { (x: Int) =>
       if (x > 0 || { state = "touched"; false }) x
       else -x
     }

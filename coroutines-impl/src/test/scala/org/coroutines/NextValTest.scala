@@ -16,7 +16,6 @@ class NextValTest extends funsuite.AnyFunSuite {
       yieldval(e)
     }
 
-
     val e = echo.inst()
     assert(e.resume)
     assert(e.expectsResumeValue)
@@ -26,5 +25,4 @@ class NextValTest extends funsuite.AnyFunSuite {
     assert(!e.resume)
     assert(e.isCompleted)
   }
-
 }

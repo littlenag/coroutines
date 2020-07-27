@@ -14,23 +14,30 @@ package object coroutines {
     "Calling $push is done internally. The correct arity function will be overriden and " +
     "and an implementation provided. Do not call directly."
 
+  // Suspends the coroutine, should only be called directly in suspended functions
+  def suspend(): Unit = {
+    sys.error("suspend allowed only inside coroutines.")
+  }
+
+  // FIXME T: NotNothing causes lots of test failures
+  // Suspends the coroutine, yielding the value provided, should only be called directly in suspended functions
+  def yieldval[T](x: T): Unit = {
+    sys.error("YieldVal allowed only inside coroutines.")
+  }
+
+  // Suspends the coroutine, awaiting a resume value, should only be called directly in suspended functions
   def next[T](): T = {
     sys.error("Next allowed only inside coroutines.")
   }
 
   // Internal placeholder method
-  private[coroutines] def suspend(): Unit = {
-    sys.error("suspend allowed only inside coroutines.")
+  private[coroutines] def awaitCellValue(): Unit = {
+    sys.error("pullcell allowed only inside coroutines.")
   }
 
   // Internal placeholder method
   private[coroutines] def pullcell[T](): T = {
     sys.error("pullcell allowed only inside coroutines.")
-  }
-
-  // FIXME T: NotNothing causes lots of test failures
-  def yieldval[T](x: T): Unit = {
-    sys.error("YieldVal allowed only inside coroutines.")
   }
 
   /** From within a coroutine, the call `yieldto(f)` will evaluate the coroutine instance `f`
@@ -72,17 +79,11 @@ package object coroutines {
   // Coroutines that yield unit values only, ie nothing useful
   // Coroutine._0[Unit, R] => may yield, is this a case we care about?
 
-  // of suspendable
-  def ofS[R](f: () => R): Coroutine._0[Unit, R] = macro CoroutineMacros.synthesize[R]
-  def ofS[T1, R](f: T1 => R): Coroutine._1[T1, Unit, R] = macro CoroutineMacros.synthesize[R]
-  def ofS[T1, T2, R](f: (T1, T2) => R): Coroutine._2[T1, T2, Unit, R] = macro CoroutineMacros.synthesize[R]
-  def ofS[T1, T2, T3, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, Unit, R] = macro CoroutineMacros.synthesize[R]
-
-  // of function
-  def ofF[R](f: () => R): Coroutine._0[Nothing, R] = macro CoroutineMacros.synthesize[R]
-  def ofF[T1, R](f: T1 => R): Coroutine._1[T1, Nothing, R] = macro CoroutineMacros.synthesize[R]
-  def ofF[T1, T2, R](f: (T1, T2) => R): Coroutine._2[T1, T2, Nothing, R] = macro CoroutineMacros.synthesize[R]
-  def ofF[T1, T2, T3, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, Nothing, R] = macro CoroutineMacros.synthesize[R]
+  // functions that may suspend an indefinite number of times, yielding no value (though .value will return null)
+  def task[R](f: () => R): Coroutine._0[Nothing, R] = macro CoroutineMacros.synthesize[R]
+  def task[T1, R](f: T1 => R): Coroutine._1[T1, Nothing, R] = macro CoroutineMacros.synthesize[R]
+  def task[T1, T2, R](f: (T1, T2) => R): Coroutine._2[T1, T2, Nothing, R] = macro CoroutineMacros.synthesize[R]
+  def task[T1, T2, T3, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, Nothing, R] = macro CoroutineMacros.synthesize[R]
 
   // Y A R
   // auto convert FunctionN to tupled version A => R
@@ -91,7 +92,7 @@ package object coroutines {
   // Replaced with cr.inst(..args)
   //def call[R](f: R): Any = macro CoroutineMacros.call[R]
 
-  // these are the optimized? versions
+  // these allow whitebxing to infer the yield type
   def coroutine[Y, R](f: () => R): Coroutine._0[_, R] = macro CoroutineLegacyMacros.synthesize[R]
   def coroutine[T1, Y, R](f: T1 => R): Coroutine._1[T1, _, R] = macro CoroutineLegacyMacros.synthesize[R]
   def coroutine[T1, T2, Y, R](f: (T1, T2) => R): Coroutine._2[T1, T2, _, R] = macro CoroutineLegacyMacros.synthesize[R]

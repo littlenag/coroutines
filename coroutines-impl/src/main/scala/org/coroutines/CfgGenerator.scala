@@ -669,6 +669,40 @@ trait CfgGenerator[C <: Context] {
       def copyWithoutSuccessors(nch: Chain) = Suspend(tree, nch, uid)
     }
 
+    case class AwaitCellValue(tree: Tree, chain: Chain, uid: Long) extends Node {
+      def successors = successor.toSeq
+      override def code = tree
+
+      def emit(z: Zipper, seen: mutable.Set[Node], subgraph: SubCfg)(implicit cc: CanCall, table: Table): Zipper = {
+        val cparam = table.names.coroutineParam
+
+        val savestate = genSaveState(subgraph)
+
+        val exittree = q"""
+          ..$savestate
+          $$awaitCellValue($cparam)
+          return
+        """
+        val z1 = z.append(exittree)
+        z1
+      }
+      override def stackVars(sub: SubCfg) = storePointVarsInChain(sub).map(_._1)
+      def extract(
+                   prevchain: Chain, seen: mutable.Map[Node, Node], ctx: ExtractSubgraphContext,
+                   subgraph: SubCfg
+                 )(implicit table: Table): Node = {
+        val nthis = this.copyWithoutSuccessors(prevchain)
+        seen(this) = nthis
+        nthis.updateBlockInfo()
+
+        this.addSuccessorsToNodeFront(ctx)
+        ctx.exitPoints(subgraph)(nthis) = successor.get.uid
+
+        nthis
+      }
+      def copyWithoutSuccessors(nch: Chain) = AwaitCellValue(tree, nch, uid)
+    }
+
     case class PullCell(tree: Tree, chain: Chain, uid: Long) extends Statement {
 
       override def value = q"()"
@@ -1145,6 +1179,19 @@ trait CfgGenerator[C <: Context] {
         case q"$_ var $_: $_ = $qual.suspend()" if isCoroutinesPkg(qual) =>
           val nch = ch.withDecl(t, false)
           val n = Node.Suspend(t, ch, table.newNodeUid())
+          val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
+          n.successor = Some(u)
+          (n, u)
+
+        case q"$_ val $_: $_ = $qual.awaitCellValue()" if isCoroutinesPkg(qual) =>
+          val nch = ch.withDecl(t, false)
+          val n = Node.AwaitCellValue(t, ch, table.newNodeUid())
+          val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
+          n.successor = Some(u)
+          (n, u)
+        case q"$_ var $_: $_ = $qual.awaitCellValue()" if isCoroutinesPkg(qual) =>
+          val nch = ch.withDecl(t, false)
+          val n = Node.AwaitCellValue(t, ch, table.newNodeUid())
           val u = Node.DefaultStatement(q"()", nch, table.newNodeUid())
           n.successor = Some(u)
           (n, u)
