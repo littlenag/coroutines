@@ -1,16 +1,14 @@
 package org.coroutines
 
 import org.scalatest._
-import scala.coroutines.common.Util._
 
-
-/**
- *
- */
 class NextValTest extends funsuite.AnyFunSuite {
 
   test("next-val statement") {
-
+    // streams <- in
+    // channels <- out
+    // streams become part of the arguments that must be supplied
+    // channels that you publish to get returned as streams
     val echo = coroutine[String].of { () =>
       val e = next[String]()
       yieldval(e)

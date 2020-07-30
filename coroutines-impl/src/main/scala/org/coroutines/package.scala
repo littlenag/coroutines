@@ -74,32 +74,13 @@ package object coroutines {
 
   def coroutine[Y]: CoroutineBuilder[Y] = new CoroutineBuilder[Y] {}
 
-  // Coroutine._0[Nothing, R] => never yields, is this a case we care about? would need to statically evaluate
-
-  // Coroutines that yield unit values only, ie nothing useful
-  // Coroutine._0[Unit, R] => may yield, is this a case we care about?
-
   // functions that may suspend an indefinite number of times, yielding no value (though .value will return null)
   def task[R](f: () => R): Coroutine._0[Nothing, R] = macro CoroutineMacros.synthesize[R]
   def task[T1, R](f: T1 => R): Coroutine._1[T1, Nothing, R] = macro CoroutineMacros.synthesize[R]
   def task[T1, T2, R](f: (T1, T2) => R): Coroutine._2[T1, T2, Nothing, R] = macro CoroutineMacros.synthesize[R]
   def task[T1, T2, T3, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, Nothing, R] = macro CoroutineMacros.synthesize[R]
 
-  // Y A R
-  // auto convert FunctionN to tupled version A => R
-  //def coroutineYR[Y, R](f: CR0[Y,R]): Coroutine._0[Y, R] = macro Coroutine.synthesize[R]
-
-  // Replaced with cr.inst(..args)
-  //def call[R](f: R): Any = macro CoroutineMacros.call[R]
-
-  // these allow whitebxing to infer the yield type
-  def coroutine[Y, R](f: () => R): Coroutine._0[_, R] = macro CoroutineLegacyMacros.synthesize[R]
-  def coroutine[T1, Y, R](f: T1 => R): Coroutine._1[T1, _, R] = macro CoroutineLegacyMacros.synthesize[R]
-  def coroutine[T1, T2, Y, R](f: (T1, T2) => R): Coroutine._2[T1, T2, _, R] = macro CoroutineLegacyMacros.synthesize[R]
-  def coroutine[T1, T2, T3, Y, R](f: (T1, T2, T3) => R): Coroutine._3[T1, T2, T3, _, R] = macro CoroutineLegacyMacros.synthesize[R]
-
   /* syntax sugar */
-
   type <~>[Y, R] = Coroutine.Instance[Y, R]
   type @@[Y,R] = Tuple2[Y,R]
 

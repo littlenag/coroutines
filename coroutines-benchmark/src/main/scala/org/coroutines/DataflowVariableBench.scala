@@ -1,7 +1,5 @@
 package org.coroutines
 
-
-
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.atomic._
 
@@ -15,7 +13,6 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Success
 import scala.util.Failure
-
 
 
 class DataflowVariableBench extends JBench.OfflineReport {
@@ -203,7 +200,7 @@ class DataflowVariableBench extends JBench.OfflineReport {
   }
 
   class DataflowVar[T] extends AtomicReference[AnyRef](Nil) {
-    val apply = coroutine[Int].of { () =>
+    val apply = coroutine[DataflowVar[T]].of { () =>
       if (this.get.isInstanceOf[List[_]]) yieldval(this)
       this.get.asInstanceOf[T]
     }

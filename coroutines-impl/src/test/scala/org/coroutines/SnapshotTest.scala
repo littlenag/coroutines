@@ -1,12 +1,6 @@
 package org.coroutines
 
-
-
 import org.scalatest._
-import scala.collection._
-import scala.util.Failure
-
-
 
 class SnapshotTest extends funsuite.AnyFunSuite {
   test("coroutine instance should be cloned and resumed as needed") {

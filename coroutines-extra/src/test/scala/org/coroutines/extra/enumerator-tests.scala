@@ -1,12 +1,7 @@
 package org.coroutines.extra
 
-
-
 import org.coroutines._
 import org.scalatest._
-import scala.collection._
-
-
 
 class EnumeratorsTest extends funsuite.AnyFunSuite {
   val rube = coroutine[Int].of { () =>

@@ -18,26 +18,4 @@ class MiscTests extends funsuite.AnyFunSuite {
     assert(fib.result === 121393)
   }
 
-  test("suspended function") {
-    var x = 0
-
-    val increment = task { (n: Int) =>
-      var i = n
-      while (i > 0) {
-        x += 1
-        i -= 1
-        suspend()
-      }
-    }
-
-    val fib = increment.inst(3)
-    assert(fib.resume)
-    assert(x === 1)
-    assert(fib.resume)
-    assert(x === 2)
-    assert(fib.resume)
-    assert(x === 3)
-    assert(!fib.resume)
-  }
-
 }
